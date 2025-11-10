@@ -2,8 +2,10 @@ package com.motorplus.motorplus.services;
 
 import com.motorplus.motorplus.dto.movementDtos.MovementCreateDto;
 import com.motorplus.motorplus.dto.movementDtos.MovementDto;
+import com.motorplus.motorplus.dto.movementDtos.MovementFilter;
 import com.motorplus.motorplus.dto.partDtos.PartCreateDto;
 import com.motorplus.motorplus.dto.partDtos.PartDto;
+import com.motorplus.motorplus.dto.partDtos.PartFilter;
 import com.motorplus.motorplus.dto.partDtos.PartUpdateDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -3,6 +3,9 @@ package com.motorplus.motorplus.services;
 import com.motorplus.motorplus.dto.ordersDtos.OrderDto;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleCreateDto;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleDto;
+import com.motorplus.motorplus.dto.vehicleDtos.VehicleFilter;
+import com.motorplus.motorplus.dto.vehicleDtos.VehicleHistoryDto;
+import com.motorplus.motorplus.dto.vehicleDtos.VehicleUpdateDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

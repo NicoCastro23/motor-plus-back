@@ -1,5 +1,8 @@
 package com.motorplus.motorplus.services;
 
+import com.motorplus.motorplus.dto.mechanicDtos.MechanicCreateDto;
+import com.motorplus.motorplus.dto.mechanicDtos.MechanicDto;
+import com.motorplus.motorplus.dto.mechanicDtos.MechanicUpdateDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
