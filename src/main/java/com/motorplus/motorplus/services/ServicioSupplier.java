@@ -1,5 +1,12 @@
 package com.motorplus.motorplus.services;
 
+import com.motorplus.motorplus.dto.supplierDtos.SupplierCreateDto;
+import com.motorplus.motorplus.dto.supplierDtos.SupplierDto;
+import com.motorplus.motorplus.dto.supplierDtos.SupplierPartCreateDto;
+import com.motorplus.motorplus.dto.supplierDtos.SupplierPartDto;
+import com.motorplus.motorplus.dto.supplierDtos.SupplierPartPatchDto;
+import com.motorplus.motorplus.dto.supplierDtos.SupplierUpdateDto;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
