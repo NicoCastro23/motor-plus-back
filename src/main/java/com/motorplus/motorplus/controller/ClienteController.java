@@ -36,6 +36,9 @@ public class ClienteController {
         this.servicioCliente = servicioCliente;
     }
 
+    @GetMapping("/_ping")
+    public String ping() { return "ok"; }
+
     @GetMapping
     public Page<ClientDto> listClients(
             @RequestParam(value = "q", required = false) String q,

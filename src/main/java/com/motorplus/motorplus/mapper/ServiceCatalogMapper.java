@@ -45,28 +45,29 @@ public interface ServiceCatalogMapper {
     long count(@Param("q") String q, @Param("active") Boolean active);
 
     @Select("""
-            SELECT id, name, description, price, active, created_at AS createdAt
-            FROM services_catalog
-            WHERE id = #{id}
-            """)
+        SELECT id, name, description, price, active, created_at AS createdAt
+        FROM services_catalog
+        WHERE id = #{id,jdbcType=OTHER}   -- ⬅️ agrega jdbcType=OTHER
+        """)
     ServiceCatalog findById(@Param("id") UUID id);
 
     @Insert("""
-            INSERT INTO services_catalog(id, name, description, price, active, created_at)
-            VALUES(#{id}, #{name}, #{description}, #{price}, #{active}, #{createdAt})
-            """)
+        INSERT INTO services_catalog(id, name, description, price, active, created_at)
+        VALUES(#{id,jdbcType=OTHER}, #{name}, #{description}, #{price}, #{active}, #{createdAt})
+        """)
     void insert(ServiceCatalog catalog);
 
     @Update("""
-            UPDATE services_catalog
-            SET name = #{name},
-                description = #{description},
-                price = #{price},
-                active = #{active}
-            WHERE id = #{id}
-            """)
+        UPDATE services_catalog
+        SET name = #{name},
+            description = #{description},
+            price = #{price},
+            active = #{active}
+        WHERE id = #{id,jdbcType=OTHER}
+        """)
     int update(ServiceCatalog catalog);
 
-    @Delete("DELETE FROM services_catalog WHERE id = #{id}")
+    @Delete("DELETE FROM services_catalog WHERE id = #{id,jdbcType=OTHER}")
     int delete(@Param("id") UUID id);
+
 }

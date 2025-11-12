@@ -70,4 +70,5 @@ logs/
 .env.local
 .env.production
 
+# Esquema local
 src/main/resources/schema_motorplus.sql
