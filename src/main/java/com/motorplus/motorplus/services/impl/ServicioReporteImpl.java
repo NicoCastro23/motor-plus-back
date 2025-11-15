@@ -1,8 +1,6 @@
 package com.motorplus.motorplus.services.impl;
 
-import com.motorplus.motorplus.dto.reportDtos.MechanicPerformanceReport;
-import com.motorplus.motorplus.dto.reportDtos.OrderMarginReport;
-import com.motorplus.motorplus.dto.reportDtos.PartTraceabilityReport;
+import com.motorplus.motorplus.dto.reportDtos.*;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleHistoryDto;
 import com.motorplus.motorplus.mapper.ReportMapper;
 import com.motorplus.motorplus.services.ServicioReporte;
@@ -87,6 +85,162 @@ public class ServicioReporteImpl implements ServicioReporte {
                 .toList();
         return new OrderMarginReport(fromInstant, toInstant, clienteId, placa, entries);
     }
+
+    // NUEVOS REPORTES IMPLEMENTADOS
+
+    @Override
+    public ClientActivityReport clientActivity() {
+        List<Map<String, Object>> rows = reportMapper.clientActivity();
+        List<ClientActivityReport.ClientActivityEntry> entries = rows.stream()
+                .map(row -> new ClientActivityReport.ClientActivityEntry(
+                        (UUID) value(row, "clientId", "clientid"),
+                        stringValue(value(row, "clientName", "clientname")),
+                        stringValue(value(row, "email")),
+                        stringValue(value(row, "phone")),
+                        (int) longValue(value(row, "vehicleCount", "vehiclecount")),
+                        toInstant(value(row, "lastOrderDate", "lastorderdate"))
+                ))
+                .toList();
+        return new ClientActivityReport(entries);
+    }
+
+    @Override
+    public PartStockReport partStockStatus() {
+        List<Map<String, Object>> rows = reportMapper.partStockStatus();
+        BigDecimal totalValue = BigDecimal.ZERO;
+
+        List<PartStockReport.PartStockEntry> entries = rows.stream()
+                .map(row -> {
+                    BigDecimal stockValue = bigDecimal(value(row, "stockValue", "stockvalue"));
+                    return new PartStockReport.PartStockEntry(
+                            (UUID) value(row, "partId", "partid"),
+                            stringValue(value(row, "partName", "partname")),
+                            stringValue(value(row, "sku")),
+                            (int) longValue(value(row, "currentStock", "currentstock")),
+                            bigDecimal(value(row, "unitPrice", "unitprice")),
+                            stockValue,
+                            stringValue(value(row, "status"))
+                    );
+                })
+                .toList();
+
+        totalValue = entries.stream()
+                .map(PartStockReport.PartStockEntry::stockValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new PartStockReport(entries, totalValue);
+    }
+
+    @Override
+    public ServicePopularityReport servicePopularity(LocalDate from, LocalDate to) {
+        Instant fromInstant = from != null ? from.atStartOfDay().toInstant(ZoneOffset.UTC) : null;
+        Instant toInstant = to != null ? to.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC) : null;
+
+        List<Map<String, Object>> rows = reportMapper.servicePopularity(fromInstant, toInstant);
+        List<ServicePopularityReport.ServicePopularityEntry> entries = rows.stream()
+                .map(row -> new ServicePopularityReport.ServicePopularityEntry(
+                        (UUID) value(row, "serviceId", "serviceid"),
+                        stringValue(value(row, "serviceName", "servicename")),
+                        longValue(value(row, "timesRequested", "timesrequested")),
+                        bigDecimal(value(row, "totalRevenue", "totalrevenue")),
+                        bigDecimal(value(row, "averagePrice", "averageprice"))
+                ))
+                .toList();
+        return new ServicePopularityReport(fromInstant, toInstant, entries);
+    }
+
+    @Override
+    public PendingInvoicesReport pendingInvoices() {
+        List<Map<String, Object>> rows = reportMapper.pendingInvoices();
+        BigDecimal totalPending = BigDecimal.ZERO;
+
+        List<PendingInvoicesReport.PendingInvoiceEntry> entries = rows.stream()
+                .map(row -> new PendingInvoicesReport.PendingInvoiceEntry(
+                        (UUID) value(row, "invoiceId", "invoiceid"),
+                        stringValue(value(row, "invoiceNumber", "invoicenumber")),
+                        (UUID) value(row, "clientId", "clientid"),
+                        stringValue(value(row, "clientName", "clientname")),
+                        toInstant(value(row, "issueDate", "issuedate")),
+                        toInstant(value(row, "dueDate", "duedate")),
+                        bigDecimal(value(row, "total")),
+                        bigDecimal(value(row, "balance")),
+                        (int) longValue(value(row, "daysOverdue", "daysoverdue"))
+                ))
+                .toList();
+
+        totalPending = entries.stream()
+                .map(PendingInvoicesReport.PendingInvoiceEntry::balance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new PendingInvoicesReport(entries, totalPending);
+    }
+
+    @Override
+    public ClientProfitabilityReport clientProfitability(LocalDate from, LocalDate to) {
+        Instant fromInstant = from != null ? from.atStartOfDay().toInstant(ZoneOffset.UTC) : null;
+        Instant toInstant = to != null ? to.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC) : null;
+
+        List<Map<String, Object>> rows = reportMapper.clientProfitability(fromInstant, toInstant);
+
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        BigDecimal totalCost = BigDecimal.ZERO;
+        BigDecimal totalProfit = BigDecimal.ZERO;
+
+        List<ClientProfitabilityReport.ClientProfitabilityEntry> entries = rows.stream()
+                .map(row -> {
+                    BigDecimal partsCost = bigDecimal(value(row, "partsCost", "partscost"));
+                    BigDecimal laborCost = bigDecimal(value(row, "laborCost", "laborcost"));
+                    return new ClientProfitabilityReport.ClientProfitabilityEntry(
+                            (UUID) value(row, "clientId", "clientid"),
+                            stringValue(value(row, "clientName", "clientname")),
+                            (int) longValue(value(row, "orderCount", "ordercount")),
+                            bigDecimal(value(row, "revenue")),
+                            partsCost,
+                            laborCost,
+                            bigDecimal(value(row, "profit")),
+                            bigDecimal(value(row, "profitMargin", "profitmargin"))
+                    );
+                })
+                .toList();
+
+        totalRevenue = entries.stream()
+                .map(ClientProfitabilityReport.ClientProfitabilityEntry::revenue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        totalCost = entries.stream()
+                .map(e -> e.partsCost().add(e.laborCost()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        totalProfit = entries.stream()
+                .map(ClientProfitabilityReport.ClientProfitabilityEntry::profit)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new ClientProfitabilityReport(fromInstant, toInstant, entries, totalRevenue, totalCost, totalProfit);
+    }
+
+    @Override
+    public MechanicProductivityReport mechanicProductivity(LocalDate from, LocalDate to) {
+        Instant fromInstant = from != null ? from.atStartOfDay().toInstant(ZoneOffset.UTC) : null;
+        Instant toInstant = to != null ? to.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC) : null;
+
+        List<Map<String, Object>> rows = reportMapper.mechanicProductivity(fromInstant, toInstant);
+        List<MechanicProductivityReport.MechanicProductivityEntry> entries = rows.stream()
+                .map(row -> new MechanicProductivityReport.MechanicProductivityEntry(
+                        (UUID) value(row, "mechanicId", "mechanicid"),
+                        stringValue(value(row, "mechanicName", "mechanicname")),
+                        stringValue(value(row, "specialization")),
+                        (int) longValue(value(row, "assignedOrders", "assignedorders")),
+                        (int) longValue(value(row, "completedOrders", "completedorders")),
+                        bigDecimal(value(row, "completionRate", "completionrate")),
+                        bigDecimal(value(row, "totalHours", "totalhours")),
+                        bigDecimal(value(row, "avgHoursPerOrder", "avghoursperorder")),
+                        bigDecimal(value(row, "revenueGenerated", "revenuegenerated"))
+                ))
+                .toList();
+        return new MechanicProductivityReport(fromInstant, toInstant, entries);
+    }
+
+    // MÉTODOS AUXILIARES
 
     private Instant toInstant(Object value) {
         if (value instanceof Instant instant) {
