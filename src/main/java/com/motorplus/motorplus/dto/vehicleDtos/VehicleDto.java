@@ -10,6 +10,7 @@ public record VehicleDto(
         String model,
         String licensePlate,
         Integer modelYear,
-        Instant createdAt
+        Instant createdAt,
+        String clientName
 ) {
 }

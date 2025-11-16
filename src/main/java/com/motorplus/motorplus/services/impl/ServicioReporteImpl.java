@@ -60,7 +60,7 @@ public class ServicioReporteImpl implements ServicioReporte {
         List<Map<String, Object>> rows = reportMapper.partTraceability(repuestoId, fromInstant, toInstant);
         List<PartTraceabilityReport.TraceabilityEntry> entries = rows.stream()
                 .map(row -> new PartTraceabilityReport.TraceabilityEntry(
-                        stringValue(value(row, "orderId", "orderid")),
+                        stringValue(value(row, "orderNumber", "ordernumber")),
                         stringValue(value(row, "vehiclePlate", "vehicleplate")),
                         (int) longValue(value(row, "quantityUsed", "quantityused")),
                         toInstant(value(row, "usedAt", "usedat"))

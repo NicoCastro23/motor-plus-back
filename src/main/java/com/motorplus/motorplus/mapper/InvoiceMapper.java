@@ -78,10 +78,10 @@ public interface InvoiceMapper {
 
     @Update("""
             UPDATE invoices
-            SET due_date = #{dueDate},
-                status = #{status},
+            SET status = #{status},
                 total = #{total},
-                balance = #{balance}
+                balance = #{balance},
+                due_date = #{dueDate}
             WHERE id = #{id}
             """)
     int update(Invoice invoice);

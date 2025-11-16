@@ -104,6 +104,17 @@ public class ServicioClienteImpl implements ServicioCliente {
         if (client == null) {
             throw new ResourceNotFoundException("Cliente no encontrado");
         }
+        
+        // Verificar si el vehículo ya existe
+        Vehicle existing = vehicleMapper.findByLicense(dto.licensePlate());
+        if (existing != null) {
+            // Si existe, actualizar solo el client_id
+            vehicleMapper.updateClientId(dto.licensePlate(), clientId);
+            existing = vehicleMapper.findByLicense(dto.licensePlate());
+            return toVehicleDto(existing);
+        }
+        
+        // Si no existe, crear nuevo vehículo
         Vehicle vehicle = new Vehicle();
         vehicle.setId(UUID.randomUUID());
         vehicle.setClientId(clientId);
@@ -121,6 +132,15 @@ public class ServicioClienteImpl implements ServicioCliente {
     }
 
     private VehicleDto toVehicleDto(Vehicle vehicle) {
-        return new VehicleDto(vehicle.getId(), vehicle.getClientId(), vehicle.getBrand(), vehicle.getModel(), vehicle.getLicensePlate(), vehicle.getModelYear(), vehicle.getCreatedAt());
+        return new VehicleDto(
+            vehicle.getId(), 
+            vehicle.getClientId(), 
+            vehicle.getBrand(), 
+            vehicle.getModel(), 
+            vehicle.getLicensePlate(), 
+            vehicle.getModelYear(), 
+            vehicle.getCreatedAt(),
+            vehicle.getClientName()
+        );
     }
 }

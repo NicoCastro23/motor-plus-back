@@ -10,6 +10,8 @@ import com.motorplus.motorplus.dto.invoiceDtos.InvoiceStatus;
 import com.motorplus.motorplus.dto.invoiceDtos.LineType;
 import com.motorplus.motorplus.dto.invoiceDtos.PaymentCreateDto;
 import com.motorplus.motorplus.dto.invoiceDtos.PaymentDto;
+import com.motorplus.motorplus.dto.ordersDtos.OrderStatus;
+import com.motorplus.motorplus.exceptions.ResourceConflictException;
 import com.motorplus.motorplus.exceptions.ResourceNotFoundException;
 import com.motorplus.motorplus.mapper.InvoiceLineMapper;
 import com.motorplus.motorplus.mapper.InvoiceMapper;
@@ -57,14 +59,32 @@ public class ServiceInvoiceImpl implements ServiceInvoice {
 
     @Override
     public InvoiceDto generateFromOrder(UUID orderId) {
+        // PASO 1: Validar orden
         Order order = orderMapper.findById(orderId);
         if (order == null) {
             throw new ResourceNotFoundException("Orden no encontrada");
         }
+        if (order.getStatus() != OrderStatus.COMPLETED) {
+            throw new ResourceConflictException("Solo se pueden generar facturas para órdenes completadas. Estado actual: " + order.getStatus());
+        }
+        
+        // PASO 2: Eliminar cualquier factura parcial previa (si existe)
+        List<Invoice> existingInvoices = invoiceMapper.findAll(orderId, null, null, null, Integer.MAX_VALUE, 0);
+        for (Invoice existing : existingInvoices) {
+            invoiceMapper.delete(existing.getId());
+        }
+        
+        // PASO 3: Obtener items de la orden
+        List<OrderItem> items = orderItemMapper.findByOrder(orderId, Integer.MAX_VALUE, 0);
+        if (items.isEmpty()) {
+            throw new ResourceConflictException("No se puede generar una factura para una orden sin items de servicio");
+        }
+        
+        // PASO 4: Crear factura nueva
         Invoice invoice = new Invoice();
         invoice.setId(UUID.randomUUID());
         invoice.setOrderId(orderId);
-        invoice.setNumber("INV-" + Instant.now().toEpochMilli());
+        invoice.setNumber("INV-" + System.currentTimeMillis());
         invoice.setStatus(InvoiceStatus.ISSUED);
         invoice.setIssueDate(Instant.now());
         invoice.setDueDate(Instant.now().plusSeconds(7 * 24 * 3600));
@@ -72,37 +92,92 @@ public class ServiceInvoiceImpl implements ServiceInvoice {
         invoice.setBalance(BigDecimal.ZERO);
         invoiceMapper.insert(invoice);
 
-        BigDecimal total = BigDecimal.ZERO;
-
-        List<OrderItem> items = orderItemMapper.findByOrder(orderId, Integer.MAX_VALUE, 0);
+        // PASO 5: Agrupar repuestos ANTES de insertar
+        // Usar Map para acumular: partId -> cantidad total y monto total
+        java.util.Map<UUID, java.util.Map<String, Object>> partsMap = new java.util.HashMap<>();
+        
+        // Recopilar todos los repuestos de todos los items
         for (OrderItem item : items) {
-            BigDecimal itemAmount = item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
-            total = total.add(itemAmount);
+            List<ItemPart> parts = itemPartMapper.findByOrderItem(item.getId(), Integer.MAX_VALUE, 0);
+            for (ItemPart part : parts) {
+                UUID partId = part.getPartId();
+                BigDecimal partAmount = part.getUnitPrice().multiply(BigDecimal.valueOf(part.getQuantity()));
+                
+                if (partsMap.containsKey(partId)) {
+                    // Ya existe, sumar cantidad y monto
+                    java.util.Map<String, Object> existing = partsMap.get(partId);
+                    BigDecimal existingAmount = (BigDecimal) existing.get("amount");
+                    existing.put("amount", existingAmount.add(partAmount));
+                } else {
+                    // Nuevo repuesto
+                    java.util.Map<String, Object> partData = new java.util.HashMap<>();
+                    partData.put("amount", partAmount);
+                    partsMap.put(partId, partData);
+                }
+            }
+        }
+        
+        // PASO 6: Insertar líneas de servicios
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (OrderItem item : items) {
+            BigDecimal serviceAmount = item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+            subtotal = subtotal.add(serviceAmount);
+            
             InvoiceLine serviceLine = new InvoiceLine();
             serviceLine.setInvoiceId(invoice.getId());
             serviceLine.setType(LineType.SERVICE);
             serviceLine.setReferenceId(item.getId());
-            serviceLine.setDescription(item.getDescription());
-            serviceLine.setAmount(itemAmount);
-            invoiceLineMapper.insert(serviceLine);
-
-            List<ItemPart> parts = itemPartMapper.findByOrderItem(item.getId(), Integer.MAX_VALUE, 0);
-            for (ItemPart part : parts) {
-                BigDecimal partAmount = part.getUnitPrice().multiply(BigDecimal.valueOf(part.getQuantity()));
-                total = total.add(partAmount);
+            String desc = item.getDescription();
+            serviceLine.setDescription(desc != null && !desc.trim().isEmpty() ? desc : "Servicio de mano de obra");
+            serviceLine.setAmount(serviceAmount);
+            
+            // Verificar antes de insertar
+            InvoiceLine existing = invoiceLineMapper.find(invoice.getId(), LineType.SERVICE, item.getId());
+            if (existing == null) {
+                invoiceLineMapper.insert(serviceLine);
+            }
+        }
+        
+        // PASO 7: Insertar líneas de repuestos (una por partId único)
+        for (java.util.Map.Entry<UUID, java.util.Map<String, Object>> entry : partsMap.entrySet()) {
+            UUID partId = entry.getKey();
+            BigDecimal partAmount = (BigDecimal) entry.getValue().get("amount");
+            subtotal = subtotal.add(partAmount);
+            
+            // Verificar antes de insertar para evitar duplicados
+            InvoiceLine existing = invoiceLineMapper.find(invoice.getId(), LineType.PART, partId);
+            if (existing == null) {
                 InvoiceLine partLine = new InvoiceLine();
                 partLine.setInvoiceId(invoice.getId());
                 partLine.setType(LineType.PART);
-                partLine.setReferenceId(part.getPartId());
+                partLine.setReferenceId(partId);
                 partLine.setDescription("Consumo repuesto");
                 partLine.setAmount(partAmount);
                 invoiceLineMapper.insert(partLine);
             }
         }
 
+        // PASO 8: Calcular e insertar IVA
+        BigDecimal taxAmount = subtotal.multiply(new BigDecimal("0.19"));
+        BigDecimal total = subtotal.add(taxAmount);
+        
+        UUID taxRefId = UUID.randomUUID();
+        InvoiceLine existingTax = invoiceLineMapper.find(invoice.getId(), LineType.MANUAL, taxRefId);
+        if (existingTax == null) {
+            InvoiceLine taxLine = new InvoiceLine();
+            taxLine.setInvoiceId(invoice.getId());
+            taxLine.setType(LineType.MANUAL);
+            taxLine.setReferenceId(taxRefId);
+            taxLine.setDescription("IVA (19%)");
+            taxLine.setAmount(taxAmount);
+            invoiceLineMapper.insert(taxLine);
+        }
+
+        // PASO 9: Actualizar totales
         invoice.setTotal(total);
         invoice.setBalance(total);
         invoiceMapper.update(invoice);
+        
         return toDto(invoice);
     }
 
@@ -244,7 +319,36 @@ public class ServiceInvoiceImpl implements ServiceInvoice {
             return;
         }
         List<InvoiceLine> lines = invoiceLineMapper.findByInvoice(invoiceId, Integer.MAX_VALUE, 0);
-        BigDecimal total = lines.stream().map(InvoiceLine::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Calcular subtotal (sin impuestos)
+        BigDecimal subtotal = lines.stream()
+            .filter(line -> !line.getDescription().contains("IVA"))
+            .map(InvoiceLine::getAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Si no hay línea de impuestos y hay subtotal, calcularla
+        boolean hasTaxLine = lines.stream().anyMatch(line -> line.getDescription().contains("IVA"));
+        BigDecimal total = subtotal;
+        
+        if (!hasTaxLine && subtotal.compareTo(BigDecimal.ZERO) > 0) {
+            // Calcular y agregar impuestos si no existen
+            BigDecimal taxRate = new BigDecimal("0.19");
+            BigDecimal taxAmount = subtotal.multiply(taxRate);
+            total = subtotal.add(taxAmount);
+            
+            // Crear línea de impuestos si no existe
+            InvoiceLine taxLine = new InvoiceLine();
+            taxLine.setInvoiceId(invoiceId);
+            taxLine.setType(LineType.MANUAL);
+            taxLine.setReferenceId(UUID.randomUUID());
+            taxLine.setDescription("IVA (19%)");
+            taxLine.setAmount(taxAmount);
+            invoiceLineMapper.insert(taxLine);
+        } else {
+            // Sumar todas las líneas incluyendo impuestos
+            total = lines.stream().map(InvoiceLine::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        
         List<Payment> payments = paymentMapper.findByInvoice(invoiceId, Integer.MAX_VALUE, 0);
         BigDecimal paid = payments.stream().map(Payment::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         invoice.setTotal(total);

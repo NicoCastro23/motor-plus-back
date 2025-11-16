@@ -8,6 +8,7 @@ import java.util.UUID;
 public record OrderCreateDto(
         @NotNull UUID clientId,
         @NotBlank String licensePlate,
-        @NotBlank String description
+        String description,
+        OrderStatus status
 ) {
 }

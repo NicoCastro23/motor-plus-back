@@ -14,15 +14,22 @@ import com.motorplus.motorplus.dto.ordersDtos.OrderItemDto;
 import com.motorplus.motorplus.dto.ordersDtos.OrderItemPatchDto;
 import com.motorplus.motorplus.dto.ordersDtos.OrderPatchDto;
 import com.motorplus.motorplus.dto.ordersDtos.OrderStatus;
+import com.motorplus.motorplus.dto.movementDtos.MovementType;
+import com.motorplus.motorplus.exceptions.ResourceConflictException;
 import com.motorplus.motorplus.exceptions.ResourceNotFoundException;
 import com.motorplus.motorplus.mapper.AssignmentMapper;
 import com.motorplus.motorplus.mapper.ItemPartMapper;
+import com.motorplus.motorplus.mapper.MovementMapper;
 import com.motorplus.motorplus.mapper.OrderItemMapper;
 import com.motorplus.motorplus.mapper.OrderMapper;
+import com.motorplus.motorplus.mapper.PartMapper;
+import com.motorplus.motorplus.mapper.VehicleMapper;
 import com.motorplus.motorplus.model.Assignment;
 import com.motorplus.motorplus.model.ItemPart;
+import com.motorplus.motorplus.model.Movement;
 import com.motorplus.motorplus.model.Order;
 import com.motorplus.motorplus.model.OrderItem;
+import com.motorplus.motorplus.model.Part;
 import com.motorplus.motorplus.services.ServicioOrden;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -43,12 +50,18 @@ public class ServicioOrdenImpl implements ServicioOrden {
     private final OrderItemMapper orderItemMapper;
     private final AssignmentMapper assignmentMapper;
     private final ItemPartMapper itemPartMapper;
+    private final VehicleMapper vehicleMapper;
+    private final PartMapper partMapper;
+    private final MovementMapper movementMapper;
 
-    public ServicioOrdenImpl(OrderMapper orderMapper, OrderItemMapper orderItemMapper, AssignmentMapper assignmentMapper, ItemPartMapper itemPartMapper) {
+    public ServicioOrdenImpl(OrderMapper orderMapper, OrderItemMapper orderItemMapper, AssignmentMapper assignmentMapper, ItemPartMapper itemPartMapper, VehicleMapper vehicleMapper, PartMapper partMapper, MovementMapper movementMapper) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.assignmentMapper = assignmentMapper;
         this.itemPartMapper = itemPartMapper;
+        this.vehicleMapper = vehicleMapper;
+        this.partMapper = partMapper;
+        this.movementMapper = movementMapper;
     }
 
     @Override
@@ -75,11 +88,17 @@ public class ServicioOrdenImpl implements ServicioOrden {
 
     @Override
     public OrderDto create(OrderCreateDto dto) {
+        // Validar que el vehículo existe
+        if (vehicleMapper.findByLicense(dto.licensePlate()) == null) {
+            throw new ResourceNotFoundException("No existe un vehículo con la placa: " + dto.licensePlate());
+        }
+        
         Order order = new Order();
         order.setId(UUID.randomUUID());
         order.setClientId(dto.clientId());
         order.setLicensePlate(dto.licensePlate());
-        order.setStatus(OrderStatus.DRAFT);
+        // Usar el estado del DTO si viene, o DRAFT por defecto
+        order.setStatus(dto.status() != null ? dto.status() : OrderStatus.DRAFT);
         order.setDescription(dto.description());
         order.setTotal(BigDecimal.ZERO);
         order.setCreatedAt(Instant.now());
@@ -177,10 +196,38 @@ public class ServicioOrdenImpl implements ServicioOrden {
 
     @Override
     public void removeItem(UUID orderId, UUID itemId) {
+        // Validar que la orden no esté completada
+        Order order = orderMapper.findById(orderId);
+        if (order == null) {
+            throw new ResourceNotFoundException("Orden no encontrada");
+        }
+        if (order.getStatus() == OrderStatus.COMPLETED) {
+            throw new ResourceConflictException("No se pueden eliminar items de una orden completada");
+        }
+        
         OrderItem item = orderItemMapper.findById(orderId, itemId);
         if (item == null) {
             throw new ResourceNotFoundException("Item no encontrado");
         }
+        
+        // Restaurar stock de todos los repuestos asociados a este item
+        List<ItemPart> parts = itemPartMapper.findByOrderItem(itemId, Integer.MAX_VALUE, 0);
+        for (ItemPart part : parts) {
+            // Restaurar stock
+            partMapper.updateStock(part.getPartId(), part.getQuantity());
+            
+            // Crear movimiento de inventario (entrada - devolución)
+            Movement movement = new Movement();
+            movement.setId(UUID.randomUUID());
+            movement.setPartId(part.getPartId());
+            movement.setType(MovementType.IN);
+            movement.setQuantity(part.getQuantity());
+            movement.setPerformedAt(Instant.now());
+            movement.setNotes("Devolución por eliminación de item en orden " + orderId + ", item " + itemId);
+            movementMapper.insert(movement);
+        }
+        
+        // Eliminar el item (esto eliminará automáticamente los repuestos asociados por CASCADE)
         orderItemMapper.delete(orderId, itemId);
         recalculateTotal(orderId);
     }
@@ -244,40 +291,149 @@ public class ServicioOrdenImpl implements ServicioOrden {
 
     @Override
     public ItemPartDto addItemPart(UUID orderId, UUID itemId, ItemPartCreateDto dto) {
+        // Validar que la orden no esté completada
+        Order order = orderMapper.findById(orderId);
+        if (order == null) {
+            throw new ResourceNotFoundException("Orden no encontrada");
+        }
+        if (order.getStatus() == OrderStatus.COMPLETED) {
+            throw new ResourceConflictException("No se pueden agregar repuestos a una orden completada");
+        }
+        
         OrderItem item = orderItemMapper.findById(orderId, itemId);
         if (item == null) {
             throw new ResourceNotFoundException("Item no encontrado");
         }
-        ItemPart part = new ItemPart();
-        part.setOrderItemId(itemId);
-        part.setPartId(dto.partId());
-        part.setQuantity(dto.quantity());
-        part.setUnitPrice(dto.unitPrice());
-        itemPartMapper.insert(part);
+        
+        // Validar que el repuesto existe y tiene stock suficiente
+        Part part = partMapper.findById(dto.partId());
+        if (part == null) {
+            throw new ResourceNotFoundException("Repuesto no encontrado");
+        }
+        if (!part.isActive()) {
+            throw new ResourceConflictException("El repuesto no está activo");
+        }
+        if (part.getStock() < dto.quantity()) {
+            throw new ResourceConflictException("Stock insuficiente. Stock disponible: " + part.getStock() + ", solicitado: " + dto.quantity());
+        }
+        if (dto.quantity() <= 0) {
+            throw new ResourceConflictException("La cantidad debe ser mayor a cero");
+        }
+        
+        // Crear el consumo de repuesto
+        ItemPart itemPart = new ItemPart();
+        itemPart.setOrderItemId(itemId);
+        itemPart.setPartId(dto.partId());
+        itemPart.setQuantity(dto.quantity());
+        itemPart.setUnitPrice(dto.unitPrice());
+        itemPartMapper.insert(itemPart);
+        
+        // Actualizar stock del repuesto (disminuir)
+        int delta = -dto.quantity();
+        partMapper.updateStock(dto.partId(), delta);
+        
+        // Crear movimiento de inventario (salida)
+        Movement movement = new Movement();
+        movement.setId(UUID.randomUUID());
+        movement.setPartId(dto.partId());
+        movement.setType(MovementType.OUT);
+        movement.setQuantity(dto.quantity());
+        movement.setPerformedAt(Instant.now());
+        movement.setNotes("Consumo en orden " + orderId + ", item " + itemId);
+        movementMapper.insert(movement);
+        
         recalculateTotal(orderId);
-        return toItemPartDto(part);
+        return toItemPartDto(itemPart);
     }
 
     @Override
     public ItemPartDto patchItemPart(UUID orderId, UUID itemId, UUID repuestoId, ItemPartPatchDto dto) {
-        ItemPart part = itemPartMapper.find(itemId, repuestoId);
-        if (part == null) {
+        // Validar que la orden no esté completada
+        Order order = orderMapper.findById(orderId);
+        if (order == null) {
+            throw new ResourceNotFoundException("Orden no encontrada");
+        }
+        if (order.getStatus() == OrderStatus.COMPLETED) {
+            throw new ResourceConflictException("No se pueden modificar repuestos de una orden completada");
+        }
+        
+        ItemPart itemPart = itemPartMapper.find(itemId, repuestoId);
+        if (itemPart == null) {
             throw new ResourceNotFoundException("Consumo no encontrado");
         }
-        if (dto.quantity() != null) part.setQuantity(dto.quantity());
-        if (dto.unitPrice() != null) part.setUnitPrice(dto.unitPrice());
-        itemPartMapper.update(part);
+        
+        // Si se cambia la cantidad, validar stock y actualizar
+        if (dto.quantity() != null && !dto.quantity().equals(itemPart.getQuantity())) {
+            if (dto.quantity() <= 0) {
+                throw new ResourceConflictException("La cantidad debe ser mayor a cero");
+            }
+            Part part = partMapper.findById(repuestoId);
+            if (part == null) {
+                throw new ResourceNotFoundException("Repuesto no encontrado");
+            }
+            
+            int diferencia = dto.quantity() - itemPart.getQuantity();
+            int stockDisponible = part.getStock();
+            
+            // Si se aumenta la cantidad, validar que hay stock suficiente
+            if (diferencia > 0 && stockDisponible < diferencia) {
+                throw new ResourceConflictException("Stock insuficiente. Stock disponible: " + stockDisponible + ", cantidad adicional solicitada: " + diferencia);
+            }
+            
+            // Actualizar stock
+            partMapper.updateStock(repuestoId, -diferencia);
+            
+            // Crear movimiento de inventario si hay cambio
+            if (diferencia != 0) {
+                Movement movement = new Movement();
+                movement.setId(UUID.randomUUID());
+                movement.setPartId(repuestoId);
+                movement.setType(diferencia > 0 ? MovementType.OUT : MovementType.IN);
+                movement.setQuantity(Math.abs(diferencia));
+                movement.setPerformedAt(Instant.now());
+                movement.setNotes("Ajuste en orden " + orderId + ", item " + itemId + ". Cantidad anterior: " + itemPart.getQuantity() + ", nueva: " + dto.quantity());
+                movementMapper.insert(movement);
+            }
+            
+            itemPart.setQuantity(dto.quantity());
+        }
+        if (dto.unitPrice() != null) itemPart.setUnitPrice(dto.unitPrice());
+        itemPartMapper.update(itemPart);
         recalculateTotal(orderId);
-        return toItemPartDto(part);
+        return toItemPartDto(itemPart);
     }
 
     @Override
     public void removeItemPart(UUID orderId, UUID itemId, Long repuestoId) {
+        // Validar que la orden no esté completada
+        Order order = orderMapper.findById(orderId);
+        if (order == null) {
+            throw new ResourceNotFoundException("Orden no encontrada");
+        }
+        if (order.getStatus() == OrderStatus.COMPLETED) {
+            throw new ResourceConflictException("No se pueden modificar repuestos de una orden completada");
+        }
+        
         UUID partId = normalizePartId(repuestoId);
-        ItemPart part = itemPartMapper.find(itemId, partId);
-        if (part == null) {
+        ItemPart itemPart = itemPartMapper.find(itemId, partId);
+        if (itemPart == null) {
             throw new ResourceNotFoundException("Consumo no encontrado");
         }
+        
+        // Restaurar stock del repuesto (aumentar)
+        int cantidadARestaurar = itemPart.getQuantity();
+        partMapper.updateStock(partId, cantidadARestaurar);
+        
+        // Crear movimiento de inventario (entrada - devolución)
+        Movement movement = new Movement();
+        movement.setId(UUID.randomUUID());
+        movement.setPartId(partId);
+        movement.setType(MovementType.IN);
+        movement.setQuantity(cantidadARestaurar);
+        movement.setPerformedAt(Instant.now());
+        movement.setNotes("Devolución de consumo en orden " + orderId + ", item " + itemId);
+        movementMapper.insert(movement);
+        
         itemPartMapper.delete(itemId, partId);
         recalculateTotal(orderId);
     }

@@ -6,6 +6,7 @@ import com.motorplus.motorplus.dto.reportDtos.PartTraceabilityReport;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleHistoryDto;
 import com.motorplus.motorplus.services.ServicioReporte;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/reports")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 public class ReportController {
 
     private final ServicioReporte servicioReporte;

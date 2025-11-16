@@ -130,7 +130,16 @@ public class ServicioVehiculoImpl implements ServicioVehiculo {
     }
 
     private VehicleDto toDto(Vehicle vehicle) {
-        return new VehicleDto(vehicle.getId(), vehicle.getClientId(), vehicle.getBrand(), vehicle.getModel(), vehicle.getLicensePlate(), vehicle.getModelYear(), vehicle.getCreatedAt());
+        return new VehicleDto(
+            vehicle.getId(), 
+            vehicle.getClientId(), 
+            vehicle.getBrand(), 
+            vehicle.getModel(), 
+            vehicle.getLicensePlate(), 
+            vehicle.getModelYear(), 
+            vehicle.getCreatedAt(),
+            vehicle.getClientName()
+        );
     }
 
     private OrderDto toOrderDto(Order order) {

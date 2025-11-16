@@ -88,6 +88,7 @@ public interface OrderMapper {
             UPDATE orders
             SET license_plate = #{licensePlate},
                 description = #{description},
+                status = #{status},
                 total = #{total},
                 updated_at = #{updatedAt}
             WHERE id = #{id}

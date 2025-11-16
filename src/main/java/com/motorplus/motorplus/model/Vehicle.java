@@ -11,6 +11,7 @@ public class Vehicle {
     private String licensePlate;
     private Integer modelYear;
     private Instant createdAt;
+    private String clientName;
 
     public UUID getId() {
         return id;
@@ -66,5 +67,13 @@ public class Vehicle {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
     }
 }
