@@ -31,6 +31,7 @@ import com.motorplus.motorplus.model.Order;
 import com.motorplus.motorplus.model.OrderItem;
 import com.motorplus.motorplus.model.Part;
 import com.motorplus.motorplus.services.ServicioOrden;
+import com.motorplus.motorplus.services.ServiceInvoice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -53,8 +54,9 @@ public class ServicioOrdenImpl implements ServicioOrden {
     private final VehicleMapper vehicleMapper;
     private final PartMapper partMapper;
     private final MovementMapper movementMapper;
+    private final ServiceInvoice serviceInvoice;
 
-    public ServicioOrdenImpl(OrderMapper orderMapper, OrderItemMapper orderItemMapper, AssignmentMapper assignmentMapper, ItemPartMapper itemPartMapper, VehicleMapper vehicleMapper, PartMapper partMapper, MovementMapper movementMapper) {
+    public ServicioOrdenImpl(OrderMapper orderMapper, OrderItemMapper orderItemMapper, AssignmentMapper assignmentMapper, ItemPartMapper itemPartMapper, VehicleMapper vehicleMapper, PartMapper partMapper, MovementMapper movementMapper, ServiceInvoice serviceInvoice) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.assignmentMapper = assignmentMapper;
@@ -62,6 +64,7 @@ public class ServicioOrdenImpl implements ServicioOrden {
         this.vehicleMapper = vehicleMapper;
         this.partMapper = partMapper;
         this.movementMapper = movementMapper;
+        this.serviceInvoice = serviceInvoice;
     }
 
     @Override
@@ -127,10 +130,60 @@ public class ServicioOrdenImpl implements ServicioOrden {
         if (order == null) {
             throw new ResourceNotFoundException("Orden no encontrada");
         }
+        
+        // AUTOMATIZACIÓN: Validar stock antes de completar orden
+        if (status == OrderStatus.COMPLETED) {
+            validateStockForOrder(id);
+        }
+        
         order.setStatus(status);
         order.setUpdatedAt(Instant.now());
         orderMapper.updateStatus(id, status, order.getUpdatedAt());
+        
+        // AUTOMATIZACIÓN: Generar factura automáticamente cuando se completa la orden
+        if (status == OrderStatus.COMPLETED) {
+            try {
+                // Verificar si ya existe una factura para esta orden
+                List<OrderItem> items = orderItemMapper.findByOrder(id, Integer.MAX_VALUE, 0);
+                if (!items.isEmpty()) {
+                    // Intentar generar factura (puede fallar si ya existe, pero no es crítico)
+                    try {
+                        serviceInvoice.generateFromOrder(id);
+                    } catch (ResourceConflictException e) {
+                        // Si ya existe una factura, no hacer nada
+                        // Esto es normal si se regenera la orden
+                    }
+                }
+            } catch (Exception e) {
+                // No fallar el cambio de estado si la generación de factura falla
+                // Solo loguear el error (en producción usar logger)
+                System.err.println("Error al generar factura automáticamente: " + e.getMessage());
+            }
+        }
+        
         return toDto(order);
+    }
+    
+    /**
+     * Valida que todos los repuestos de la orden tengan stock suficiente
+     */
+    private void validateStockForOrder(UUID orderId) {
+        List<OrderItem> items = orderItemMapper.findByOrder(orderId, Integer.MAX_VALUE, 0);
+        for (OrderItem item : items) {
+            List<ItemPart> parts = itemPartMapper.findByOrderItem(item.getId(), Integer.MAX_VALUE, 0);
+            for (ItemPart itemPart : parts) {
+                Part part = partMapper.findById(itemPart.getPartId());
+                if (part == null || !part.isActive()) {
+                    throw new ResourceConflictException("El repuesto " + itemPart.getPartId() + " no existe o está inactivo");
+                }
+                if (part.getStock() < itemPart.getQuantity()) {
+                    throw new ResourceConflictException(
+                        String.format("Stock insuficiente para el repuesto '%s'. Stock disponible: %d, requerido: %d",
+                            part.getName(), part.getStock(), itemPart.getQuantity())
+                    );
+                }
+            }
+        }
     }
 
     @Override

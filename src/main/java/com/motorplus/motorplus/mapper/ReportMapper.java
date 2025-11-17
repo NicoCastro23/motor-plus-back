@@ -23,6 +23,7 @@ public interface ReportMapper {
     List<Map<String, Object>> vehicleHistory(@Param("licensePlate") String licensePlate);
 
     @Select("""
+            <script>
             SELECT m.id AS mechanicId,
                    CONCAT(m.first_name, ' ', m.last_name) AS mechanicName,
                    COUNT(DISTINCT CASE WHEN o.status = 'COMPLETED' THEN a.order_item_id END) AS ordersCompleted,
@@ -31,18 +32,26 @@ public interface ReportMapper {
                      LEFT JOIN assignments a ON a.mechanic_id = m.id
                      LEFT JOIN order_items oi ON oi.id = a.order_item_id
                      LEFT JOIN orders o ON o.id = oi.order_id
-                         AND (#{from,jdbcType=TIMESTAMP} IS NULL OR o.created_at >= #{from,jdbcType=TIMESTAMP})
-                         AND (#{to,jdbcType=TIMESTAMP} IS NULL OR o.created_at <= #{to,jdbcType=TIMESTAMP})
-            WHERE (#{mechanicId,jdbcType=OTHER} IS NULL OR m.id = #{mechanicId,jdbcType=OTHER})
-              AND m.active = true
+            WHERE m.active = true
+            <if test="from != null">
+                AND o.created_at >= #{from,jdbcType=TIMESTAMP}
+            </if>
+            <if test="to != null">
+                AND o.created_at &lt;= #{to,jdbcType=TIMESTAMP}
+            </if>
+            <if test="mechanicId != null">
+                AND m.id = #{mechanicId,jdbcType=OTHER}
+            </if>
             GROUP BY m.id, m.first_name, m.last_name
             ORDER BY mechanicName
+            </script>
             """)
     List<Map<String, Object>> mechanicPerformance(@Param("from") Instant from,
                                                   @Param("to") Instant to,
                                                   @Param("mechanicId") UUID mechanicId);
 
     @Select("""
+            <script>
             SELECT o.id AS orderId,
                    CONCAT('ORD-', TO_CHAR(o.created_at::DATE, 'YYYYMMDD')) AS orderNumber,
                    o.license_plate AS vehiclePlate,
@@ -52,15 +61,21 @@ public interface ReportMapper {
                      JOIN order_items oi ON oi.id = ip.order_item_id
                      JOIN orders o ON o.id = oi.order_id
             WHERE ip.part_id = #{partId,jdbcType=OTHER}
-              AND (#{from,jdbcType=TIMESTAMP} IS NULL OR o.created_at >= #{from,jdbcType=TIMESTAMP})
-              AND (#{to,jdbcType=TIMESTAMP} IS NULL OR o.created_at <= #{to,jdbcType=TIMESTAMP})
+            <if test="from != null">
+                AND o.created_at >= #{from,jdbcType=TIMESTAMP}
+            </if>
+            <if test="to != null">
+                AND o.created_at &lt;= #{to,jdbcType=TIMESTAMP}
+            </if>
             ORDER BY o.created_at DESC
+            </script>
             """)
     List<Map<String, Object>> partTraceability(@Param("partId") UUID partId,
                                                @Param("from") Instant from,
                                                @Param("to") Instant to);
 
     @Select("""
+            <script>
             SELECT o.id AS orderId,
                    CONCAT('ORD-', TO_CHAR(o.created_at::DATE, 'YYYYMMDD')) AS orderNumber,
                    o.total AS revenue,
@@ -69,12 +84,22 @@ public interface ReportMapper {
             FROM orders o
                      LEFT JOIN order_items oi ON oi.order_id = o.id
                      LEFT JOIN order_item_parts ip ON ip.order_item_id = oi.id
-            WHERE (#{from,jdbcType=TIMESTAMP} IS NULL OR o.created_at >= #{from,jdbcType=TIMESTAMP})
-              AND (#{to,jdbcType=TIMESTAMP} IS NULL OR o.created_at <= #{to,jdbcType=TIMESTAMP})
-              AND (#{clientId,jdbcType=OTHER} IS NULL OR o.client_id = #{clientId,jdbcType=OTHER})
-              AND (#{licensePlate} IS NULL OR o.license_plate = #{licensePlate})
+            WHERE 1 = 1
+            <if test="from != null">
+                AND o.created_at >= #{from,jdbcType=TIMESTAMP}
+            </if>
+            <if test="to != null">
+                AND o.created_at &lt;= #{to,jdbcType=TIMESTAMP}
+            </if>
+            <if test="clientId != null">
+                AND o.client_id = #{clientId,jdbcType=OTHER}
+            </if>
+            <if test="licensePlate != null">
+                AND o.license_plate = #{licensePlate}
+            </if>
             GROUP BY o.id, o.created_at, o.total
             ORDER BY o.created_at DESC
+            </script>
             """)
     List<Map<String, Object>> orderMargins(@Param("from") Instant from,
                                            @Param("to") Instant to,
@@ -119,6 +144,7 @@ public interface ReportMapper {
 
     // Reporte Intermedio 1: Popularidad de Servicios
     @Select("""
+            <script>
             SELECT sc.id AS serviceId,
                    sc.name AS serviceName,
                    COUNT(oi.id) AS timesRequested,
@@ -128,10 +154,15 @@ public interface ReportMapper {
                      INNER JOIN order_items oi ON oi.service_id = sc.id
                      INNER JOIN orders o ON o.id = oi.order_id
             WHERE sc.active = true
-              AND (#{from,jdbcType=TIMESTAMP} IS NULL OR o.created_at >= #{from,jdbcType=TIMESTAMP})
-              AND (#{to,jdbcType=TIMESTAMP} IS NULL OR o.created_at <= #{to,jdbcType=TIMESTAMP})
+            <if test="from != null">
+                AND o.created_at >= #{from,jdbcType=TIMESTAMP}
+            </if>
+            <if test="to != null">
+                AND o.created_at &lt;= #{to,jdbcType=TIMESTAMP}
+            </if>
             GROUP BY sc.id, sc.name
             ORDER BY timesRequested DESC
+            </script>
             """)
     List<Map<String, Object>> servicePopularity(@Param("from") Instant from,
                                                 @Param("to") Instant to);
@@ -163,6 +194,7 @@ public interface ReportMapper {
 
     // Reporte Complejo 1: Rentabilidad por Cliente
     @Select("""
+            <script>
             SELECT c.id AS clientId,
                    CONCAT(c.first_name, ' ', c.last_name) AS clientName,
                    COUNT(DISTINCT o.id) AS orderCount,
@@ -182,8 +214,12 @@ public interface ReportMapper {
             FROM clients c
                      INNER JOIN orders o ON o.client_id = c.id
                          AND o.status = 'COMPLETED'
-                         AND (#{from,jdbcType=TIMESTAMP} IS NULL OR o.created_at >= #{from,jdbcType=TIMESTAMP})
-                         AND (#{to,jdbcType=TIMESTAMP} IS NULL OR o.created_at <= #{to,jdbcType=TIMESTAMP})
+            <if test="from != null">
+                AND o.created_at >= #{from,jdbcType=TIMESTAMP}
+            </if>
+            <if test="to != null">
+                AND o.created_at &lt;= #{to,jdbcType=TIMESTAMP}
+            </if>
                      LEFT JOIN (
                          SELECT oi2.order_id,
                                 COALESCE(SUM(ip.quantity * ip.unit_price), 0) AS parts_cost
@@ -199,12 +235,14 @@ public interface ReportMapper {
                      ) labor_data ON labor_data.order_id = o.id
             GROUP BY c.id, c.first_name, c.last_name
             ORDER BY profit DESC
+            </script>
             """)
     List<Map<String, Object>> clientProfitability(@Param("from") Instant from,
                                                   @Param("to") Instant to);
 
     // Reporte Complejo 2: Productividad de Mecánicos
     @Select("""
+            <script>
             SELECT m.id AS mechanicId,
                    CONCAT(m.first_name, ' ', m.last_name) AS mechanicName,
                    m.specialization,
@@ -227,11 +265,16 @@ public interface ReportMapper {
                      LEFT JOIN assignments a ON a.mechanic_id = m.id
                      LEFT JOIN order_items oi ON oi.id = a.order_item_id
                      LEFT JOIN orders o ON o.id = oi.order_id
-                         AND (#{from,jdbcType=TIMESTAMP} IS NULL OR o.created_at >= #{from,jdbcType=TIMESTAMP})
-                         AND (#{to,jdbcType=TIMESTAMP} IS NULL OR o.created_at <= #{to,jdbcType=TIMESTAMP})
             WHERE m.active = true
+            <if test="from != null">
+                AND o.created_at >= #{from,jdbcType=TIMESTAMP}
+            </if>
+            <if test="to != null">
+                AND o.created_at &lt;= #{to,jdbcType=TIMESTAMP}
+            </if>
             GROUP BY m.id, m.first_name, m.last_name, m.specialization
             ORDER BY completionRate DESC, revenueGenerated DESC
+            </script>
             """)
     List<Map<String, Object>> mechanicProductivity(@Param("from") Instant from,
                                                    @Param("to") Instant to);
