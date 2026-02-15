@@ -72,3 +72,4 @@ logs/
 
 # Esquema local
 src/main/resources/schema_motorplus.sql
+src/main/resources/application.yml
