@@ -11,7 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
-public interface ServicioSupplier {
+public interface SupplierService {
     Page<SupplierDto> list(String q, Pageable p);
     SupplierDto get(UUID id);
     SupplierDto create(SupplierCreateDto dto);

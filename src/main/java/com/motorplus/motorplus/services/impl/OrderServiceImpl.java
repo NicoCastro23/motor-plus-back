@@ -30,7 +30,7 @@ import com.motorplus.motorplus.model.Movement;
 import com.motorplus.motorplus.model.Order;
 import com.motorplus.motorplus.model.OrderItem;
 import com.motorplus.motorplus.model.Part;
-import com.motorplus.motorplus.services.ServicioOrden;
+import com.motorplus.motorplus.services.OrderService;
 import com.motorplus.motorplus.services.ServiceInvoice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -45,7 +45,7 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class ServicioOrdenImpl implements ServicioOrden {
+public class OrderServiceImpl implements OrderService {
 
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
@@ -56,7 +56,7 @@ public class ServicioOrdenImpl implements ServicioOrden {
     private final MovementMapper movementMapper;
     private final ServiceInvoice serviceInvoice;
 
-    public ServicioOrdenImpl(OrderMapper orderMapper, OrderItemMapper orderItemMapper, AssignmentMapper assignmentMapper, ItemPartMapper itemPartMapper, VehicleMapper vehicleMapper, PartMapper partMapper, MovementMapper movementMapper, ServiceInvoice serviceInvoice) {
+    public OrderServiceImpl(OrderMapper orderMapper, OrderItemMapper orderItemMapper, AssignmentMapper assignmentMapper, ItemPartMapper itemPartMapper, VehicleMapper vehicleMapper, PartMapper partMapper, MovementMapper movementMapper, ServiceInvoice serviceInvoice) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.assignmentMapper = assignmentMapper;

@@ -9,7 +9,7 @@ import com.motorplus.motorplus.dto.vehicleDtos.VehicleUpdateDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-public interface ServicioVehiculo {
+public interface VehicleService {
     Page<VehicleDto> list(VehicleFilter f, Pageable p);
     VehicleDto get(String placa);
     VehicleDto create(VehicleCreateDto dto);

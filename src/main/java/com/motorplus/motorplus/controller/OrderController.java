@@ -14,7 +14,7 @@ import com.motorplus.motorplus.dto.ordersDtos.OrderItemDto;
 import com.motorplus.motorplus.dto.ordersDtos.OrderItemPatchDto;
 import com.motorplus.motorplus.dto.ordersDtos.OrderPatchDto;
 import com.motorplus.motorplus.dto.ordersDtos.OrderStatus;
-import com.motorplus.motorplus.services.ServicioOrden;
+import com.motorplus.motorplus.services.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,9 +30,9 @@ import java.util.UUID;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 public class OrderController {
 
-    private final ServicioOrden servicioOrden;
+    private final OrderService servicioOrden;
 
-    public OrderController(ServicioOrden servicioOrden) {
+    public OrderController(OrderService servicioOrden) {
         this.servicioOrden = servicioOrden;
     }
 

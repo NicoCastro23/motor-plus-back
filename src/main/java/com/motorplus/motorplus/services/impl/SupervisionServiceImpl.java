@@ -5,7 +5,7 @@ import com.motorplus.motorplus.dto.supervisionDtos.SupervisionDto;
 import com.motorplus.motorplus.exceptions.ResourceNotFoundException;
 import com.motorplus.motorplus.mapper.SupervisionMapper;
 import com.motorplus.motorplus.model.Supervision;
-import com.motorplus.motorplus.services.ServicioSupervision;
+import com.motorplus.motorplus.services.SupervisionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -18,11 +18,11 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class ServicioSupervisionImpl implements ServicioSupervision {
+public class SupervisionServiceImpl implements SupervisionService {
 
     private final SupervisionMapper supervisionMapper;
 
-    public ServicioSupervisionImpl(SupervisionMapper supervisionMapper) {
+    public SupervisionServiceImpl(SupervisionMapper supervisionMapper) {
         this.supervisionMapper = supervisionMapper;
     }
 

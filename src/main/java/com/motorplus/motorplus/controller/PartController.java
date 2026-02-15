@@ -7,7 +7,7 @@ import com.motorplus.motorplus.dto.partDtos.PartCreateDto;
 import com.motorplus.motorplus.dto.partDtos.PartDto;
 import com.motorplus.motorplus.dto.partDtos.PartFilter;
 import com.motorplus.motorplus.dto.partDtos.PartUpdateDto;
-import com.motorplus.motorplus.services.ServicioPart;
+import com.motorplus.motorplus.services.PartService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,9 +23,9 @@ import java.util.UUID;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 public class PartController {
 
-    private final ServicioPart servicioPart;
+    private final PartService servicioPart;
 
-    public PartController(ServicioPart servicioPart) {
+    public PartController(PartService servicioPart) {
         this.servicioPart = servicioPart;
     }
 

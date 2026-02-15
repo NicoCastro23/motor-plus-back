@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
-public interface ServicioPart {
+public interface PartService {
     Page<PartDto> list(PartFilter f, Pageable p);
     PartDto get(UUID id);
     PartDto create(PartCreateDto dto);

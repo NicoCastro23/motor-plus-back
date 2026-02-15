@@ -5,7 +5,7 @@ import com.motorplus.motorplus.dto.usersDtos.ClientDto;
 import com.motorplus.motorplus.dto.usersDtos.ClientUpdateDto;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleCreateDto;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleDto;
-import com.motorplus.motorplus.services.ServicioCliente;
+import com.motorplus.motorplus.services.ClientService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,11 +30,11 @@ import java.util.UUID;
 @RequestMapping("/api/clients")
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 @Validated
-public class ClienteController {
+public class ClientController {
 
-    private final ServicioCliente servicioCliente;
+    private final ClientService servicioCliente;
 
-    public ClienteController(ServicioCliente servicioCliente) {
+    public ClientController(ClientService servicioCliente) {
         this.servicioCliente = servicioCliente;
     }
 

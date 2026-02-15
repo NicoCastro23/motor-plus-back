@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
-public interface ServicioSupervision {
+public interface SupervisionService {
     Page<SupervisionDto> list(UUID supervisorId, UUID supervisadoId, UUID ordenId, Pageable p);
     SupervisionDto create(SupervisionCreateDto dto);
     void delete(UUID supervisorId, UUID supervisadoId, UUID ordenId);

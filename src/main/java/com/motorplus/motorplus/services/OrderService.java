@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
-public interface ServicioOrden {
+public interface OrderService {
     Page<OrderDto> list(OrderFilter f, Pageable p);
     OrderDto get(UUID id);
     OrderDto create(OrderCreateDto dto);

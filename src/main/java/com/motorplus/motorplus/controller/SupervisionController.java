@@ -2,7 +2,7 @@ package com.motorplus.motorplus.controller;
 
 import com.motorplus.motorplus.dto.supervisionDtos.SupervisionCreateDto;
 import com.motorplus.motorplus.dto.supervisionDtos.SupervisionDto;
-import com.motorplus.motorplus.services.ServicioSupervision;
+import com.motorplus.motorplus.services.SupervisionService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,9 +18,9 @@ import java.util.UUID;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 public class SupervisionController {
 
-    private final ServicioSupervision servicioSupervision;
+    private final SupervisionService servicioSupervision;
 
-    public SupervisionController(ServicioSupervision servicioSupervision) {
+    public SupervisionController(SupervisionService servicioSupervision) {
         this.servicioSupervision = servicioSupervision;
     }
 

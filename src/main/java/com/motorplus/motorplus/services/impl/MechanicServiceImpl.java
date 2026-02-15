@@ -6,7 +6,7 @@ import com.motorplus.motorplus.dto.mechanicDtos.MechanicUpdateDto;
 import com.motorplus.motorplus.exceptions.ResourceNotFoundException;
 import com.motorplus.motorplus.mapper.MechanicMapper;
 import com.motorplus.motorplus.model.Mechanic;
-import com.motorplus.motorplus.services.ServicioMecanico;
+import com.motorplus.motorplus.services.MechanicService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -19,11 +19,11 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class ServicioMecanicoImpl implements ServicioMecanico {
+public class MechanicServiceImpl implements MechanicService {
 
     private final MechanicMapper mechanicMapper;
 
-    public ServicioMecanicoImpl(MechanicMapper mechanicMapper) {
+    public MechanicServiceImpl(MechanicMapper mechanicMapper) {
         this.mechanicMapper = mechanicMapper;
     }
 

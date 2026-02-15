@@ -6,7 +6,7 @@ import com.motorplus.motorplus.dto.serviceDtos.ServiceUpdateDto;
 import com.motorplus.motorplus.exceptions.ResourceNotFoundException;
 import com.motorplus.motorplus.mapper.ServiceCatalogMapper;
 import com.motorplus.motorplus.model.ServiceCatalog;
-import com.motorplus.motorplus.services.ServicioCatalogoServicio;
+import com.motorplus.motorplus.services.ServiceCatalogService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -19,11 +19,11 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class ServicioCatalogoServicioImpl implements ServicioCatalogoServicio {
+public class ServiceCatalogServiceImpl implements ServiceCatalogService {
 
     private final ServiceCatalogMapper serviceCatalogMapper;
 
-    public ServicioCatalogoServicioImpl(ServiceCatalogMapper serviceCatalogMapper) {
+    public ServiceCatalogServiceImpl(ServiceCatalogMapper serviceCatalogMapper) {
         this.serviceCatalogMapper = serviceCatalogMapper;
     }
 

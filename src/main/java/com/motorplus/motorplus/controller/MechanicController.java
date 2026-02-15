@@ -3,7 +3,7 @@ package com.motorplus.motorplus.controller;
 import com.motorplus.motorplus.dto.mechanicDtos.MechanicCreateDto;
 import com.motorplus.motorplus.dto.mechanicDtos.MechanicDto;
 import com.motorplus.motorplus.dto.mechanicDtos.MechanicUpdateDto;
-import com.motorplus.motorplus.services.ServicioMecanico;
+import com.motorplus.motorplus.services.MechanicService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,9 +19,9 @@ import java.util.UUID;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 public class MechanicController {
 
-    private final ServicioMecanico servicioMecanico;
+    private final MechanicService servicioMecanico;
 
-    public MechanicController(ServicioMecanico servicioMecanico) {
+    public MechanicController(MechanicService servicioMecanico) {
         this.servicioMecanico = servicioMecanico;
     }
 

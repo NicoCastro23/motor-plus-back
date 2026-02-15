@@ -6,7 +6,7 @@ import com.motorplus.motorplus.dto.supplierDtos.SupplierPartCreateDto;
 import com.motorplus.motorplus.dto.supplierDtos.SupplierPartDto;
 import com.motorplus.motorplus.dto.supplierDtos.SupplierPartPatchDto;
 import com.motorplus.motorplus.dto.supplierDtos.SupplierUpdateDto;
-import com.motorplus.motorplus.services.ServicioSupplier;
+import com.motorplus.motorplus.services.SupplierService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,9 +22,9 @@ import java.util.UUID;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 public class SupplierController {
 
-    private final ServicioSupplier servicioSupplier;
+    private final SupplierService servicioSupplier;
 
-    public SupplierController(ServicioSupplier servicioSupplier) {
+    public SupplierController(SupplierService servicioSupplier) {
         this.servicioSupplier = servicioSupplier;
     }
 

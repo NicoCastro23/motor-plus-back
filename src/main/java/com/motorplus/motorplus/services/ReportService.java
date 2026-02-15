@@ -5,7 +5,7 @@ import com.motorplus.motorplus.dto.vehicleDtos.VehicleHistoryDto;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public interface ServicioReporte {
+public interface ReportService {
     VehicleHistoryDto vehicleHistory(String placa);
     MechanicPerformanceReport performance(LocalDate from, LocalDate to, UUID mecanicoId);
     PartTraceabilityReport traceability(UUID repuestoId, LocalDate from, LocalDate to);

@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
-public interface ServicioMecanico {
+public interface MechanicService {
     Page<MechanicDto> list(String q, String especializacion, Pageable p);
     MechanicDto get(UUID id);
     MechanicDto create(MechanicCreateDto dto);

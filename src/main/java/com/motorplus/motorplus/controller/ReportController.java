@@ -4,7 +4,7 @@ import com.motorplus.motorplus.dto.reportDtos.MechanicPerformanceReport;
 import com.motorplus.motorplus.dto.reportDtos.OrderMarginReport;
 import com.motorplus.motorplus.dto.reportDtos.PartTraceabilityReport;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleHistoryDto;
-import com.motorplus.motorplus.services.ServicioReporte;
+import com.motorplus.motorplus.services.ReportService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,9 +23,9 @@ import java.util.UUID;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 public class ReportController {
 
-    private final ServicioReporte servicioReporte;
+    private final ReportService servicioReporte;
 
-    public ReportController(ServicioReporte servicioReporte) {
+    public ReportController(ReportService servicioReporte) {
         this.servicioReporte = servicioReporte;
     }
 

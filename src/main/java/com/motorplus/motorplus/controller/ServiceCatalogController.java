@@ -3,7 +3,7 @@ package com.motorplus.motorplus.controller;
 import com.motorplus.motorplus.dto.serviceDtos.ServiceCreateDto;
 import com.motorplus.motorplus.dto.serviceDtos.ServiceDto;
 import com.motorplus.motorplus.dto.serviceDtos.ServiceUpdateDto;
-import com.motorplus.motorplus.services.ServicioCatalogoServicio;
+import com.motorplus.motorplus.services.ServiceCatalogService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,11 +17,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/services")
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
-public class CatalogoServicioController {
+public class ServiceCatalogController {
 
-    private final ServicioCatalogoServicio servicioCatalogoServicio;
+    private final ServiceCatalogService servicioCatalogoServicio;
 
-    public CatalogoServicioController(ServicioCatalogoServicio servicioCatalogoServicio) {
+    public ServiceCatalogController(ServiceCatalogService servicioCatalogoServicio) {
         this.servicioCatalogoServicio = servicioCatalogoServicio;
     }
 

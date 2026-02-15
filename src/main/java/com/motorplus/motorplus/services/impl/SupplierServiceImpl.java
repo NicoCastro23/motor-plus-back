@@ -11,7 +11,7 @@ import com.motorplus.motorplus.mapper.SupplierMapper;
 import com.motorplus.motorplus.mapper.SupplierPartMapper;
 import com.motorplus.motorplus.model.Supplier;
 import com.motorplus.motorplus.model.SupplierPart;
-import com.motorplus.motorplus.services.ServicioSupplier;
+import com.motorplus.motorplus.services.SupplierService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,12 +24,12 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class ServicioSupplierImpl implements ServicioSupplier {
+public class SupplierServiceImpl implements SupplierService {
 
     private final SupplierMapper supplierMapper;
     private final SupplierPartMapper supplierPartMapper;
 
-    public ServicioSupplierImpl(SupplierMapper supplierMapper, SupplierPartMapper supplierPartMapper) {
+    public SupplierServiceImpl(SupplierMapper supplierMapper, SupplierPartMapper supplierPartMapper) {
         this.supplierMapper = supplierMapper;
         this.supplierPartMapper = supplierPartMapper;
     }

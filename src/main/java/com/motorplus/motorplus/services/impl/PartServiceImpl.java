@@ -14,7 +14,7 @@ import com.motorplus.motorplus.mapper.MovementMapper;
 import com.motorplus.motorplus.mapper.PartMapper;
 import com.motorplus.motorplus.model.Movement;
 import com.motorplus.motorplus.model.Part;
-import com.motorplus.motorplus.services.ServicioPart;
+import com.motorplus.motorplus.services.PartService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -27,12 +27,12 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class ServicioPartImpl implements ServicioPart {
+public class PartServiceImpl implements PartService {
 
     private final PartMapper partMapper;
     private final MovementMapper movementMapper;
 
-    public ServicioPartImpl(PartMapper partMapper, MovementMapper movementMapper) {
+    public PartServiceImpl(PartMapper partMapper, MovementMapper movementMapper) {
         this.partMapper = partMapper;
         this.movementMapper = movementMapper;
     }

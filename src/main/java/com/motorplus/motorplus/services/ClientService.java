@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
-public interface ServicioCliente {
+public interface ClientService {
     Page<ClientDto> list(String q, String email, Pageable pageable);
     ClientDto get(UUID id);
     ClientDto create(ClientCreateDto dto);

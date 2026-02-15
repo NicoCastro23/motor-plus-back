@@ -3,7 +3,7 @@ package com.motorplus.motorplus.services.impl;
 import com.motorplus.motorplus.dto.reportDtos.*;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleHistoryDto;
 import com.motorplus.motorplus.mapper.ReportMapper;
-import com.motorplus.motorplus.services.ServicioReporte;
+import com.motorplus.motorplus.services.ReportService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,11 +17,11 @@ import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
-public class ServicioReporteImpl implements ServicioReporte {
+public class ReportServiceImpl implements ReportService {
 
     private final ReportMapper reportMapper;
 
-    public ServicioReporteImpl(ReportMapper reportMapper) {
+    public ReportServiceImpl(ReportMapper reportMapper) {
         this.reportMapper = reportMapper;
     }
 

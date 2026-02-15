@@ -6,7 +6,7 @@ import com.motorplus.motorplus.dto.vehicleDtos.VehicleDto;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleFilter;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleHistoryDto;
 import com.motorplus.motorplus.dto.vehicleDtos.VehicleUpdateDto;
-import com.motorplus.motorplus.services.ServicioVehiculo;
+import com.motorplus.motorplus.services.VehicleService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 public class VehicleController {
 
-    private final ServicioVehiculo servicioVehiculo;
+    private final VehicleService servicioVehiculo;
 
-    public VehicleController(ServicioVehiculo servicioVehiculo) {
+    public VehicleController(VehicleService servicioVehiculo) {
         this.servicioVehiculo = servicioVehiculo;
     }
 

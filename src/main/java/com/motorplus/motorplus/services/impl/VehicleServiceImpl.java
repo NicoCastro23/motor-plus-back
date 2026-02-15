@@ -13,7 +13,7 @@ import com.motorplus.motorplus.mapper.ReportMapper;
 import com.motorplus.motorplus.mapper.VehicleMapper;
 import com.motorplus.motorplus.model.Order;
 import com.motorplus.motorplus.model.Vehicle;
-import com.motorplus.motorplus.services.ServicioVehiculo;
+import com.motorplus.motorplus.services.VehicleService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -27,13 +27,13 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class ServicioVehiculoImpl implements ServicioVehiculo {
+public class VehicleServiceImpl implements VehicleService {
 
     private final VehicleMapper vehicleMapper;
     private final OrderMapper orderMapper;
     private final ReportMapper reportMapper;
 
-    public ServicioVehiculoImpl(VehicleMapper vehicleMapper, OrderMapper orderMapper, ReportMapper reportMapper) {
+    public VehicleServiceImpl(VehicleMapper vehicleMapper, OrderMapper orderMapper, ReportMapper reportMapper) {
         this.vehicleMapper = vehicleMapper;
         this.orderMapper = orderMapper;
         this.reportMapper = reportMapper;
