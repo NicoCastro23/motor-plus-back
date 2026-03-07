@@ -3,6 +3,7 @@ package com.motorplus.motorplus.services;
 import com.motorplus.motorplus.dto.authDtos.ChangePasswordRequest;
 import com.motorplus.motorplus.dto.authDtos.LoginRequest;
 import com.motorplus.motorplus.dto.authDtos.LoginResponse;
+import com.motorplus.motorplus.dto.authDtos.RegisterRequest;
 import com.motorplus.motorplus.exceptions.ResourceConflictException;
 import com.motorplus.motorplus.exceptions.ResourceNotFoundException;
 import com.motorplus.motorplus.mapper.AdminMapper;
@@ -11,6 +12,9 @@ import com.motorplus.motorplus.util.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -44,6 +48,22 @@ public class AuthService {
         String token = jwtUtil.generateToken(admin.getUsername());
         
         return new LoginResponse(token, admin.getUsername(), admin.getEmail());
+    }
+
+    public void register(RegisterRequest request) {
+        if (adminMapper.findByUsername(request.username()) != null) {
+            throw new ResourceConflictException("El nombre de usuario ya está en uso");
+        }
+
+        Admin admin = new Admin();
+        admin.setId(UUID.randomUUID());
+        admin.setUsername(request.username());
+        admin.setEmail(request.email());
+        admin.setPassword(passwordEncoder.encode(request.password()));
+        admin.setActive(true);
+        admin.setCreatedAt(Instant.now());
+
+        adminMapper.insert(admin);
     }
 
     public void changePassword(String username, ChangePasswordRequest request) {

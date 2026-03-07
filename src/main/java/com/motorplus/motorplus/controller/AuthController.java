@@ -3,7 +3,9 @@ package com.motorplus.motorplus.controller;
 import com.motorplus.motorplus.dto.authDtos.ChangePasswordRequest;
 import com.motorplus.motorplus.dto.authDtos.LoginRequest;
 import com.motorplus.motorplus.dto.authDtos.LoginResponse;
+import com.motorplus.motorplus.dto.authDtos.RegisterRequest;
 import com.motorplus.motorplus.services.AuthService;
+import org.springframework.http.HttpStatus;
 import com.motorplus.motorplus.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -27,6 +29,12 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/change-password")

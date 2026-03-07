@@ -1,6 +1,7 @@
 package com.motorplus.motorplus.mapper;
 
 import com.motorplus.motorplus.model.Admin;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
@@ -30,6 +31,12 @@ public interface AdminMapper {
         @Result(property = "createdAt", column = "created_at", javaType = Instant.class, jdbcType = JdbcType.TIMESTAMP)
     })
     Admin findByUsername(@Param("username") String username);
+
+    @Insert("""
+            INSERT INTO admins(id, username, password, email, active, created_at)
+            VALUES(#{id}::uuid, #{username}, #{password}, #{email}, #{active}, #{createdAt})
+            """)
+    void insert(Admin admin);
 
     @Update("""
             UPDATE admins
