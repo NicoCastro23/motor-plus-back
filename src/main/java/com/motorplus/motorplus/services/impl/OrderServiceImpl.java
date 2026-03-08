@@ -192,6 +192,9 @@ public class OrderServiceImpl implements OrderService {
         if (order == null) {
             throw new ResourceNotFoundException("Orden no encontrada");
         }
+        if (order.getStatus() == OrderStatus.COMPLETED) {
+            throw new ResourceConflictException("No se puede eliminar una orden completada");
+        }
         orderMapper.delete(id);
     }
 

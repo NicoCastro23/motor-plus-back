@@ -2,6 +2,7 @@ package com.motorplus.motorplus.mapper;
 
 import com.motorplus.motorplus.model.Mechanic;
 import org.apache.ibatis.annotations.*;
+import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 
 import java.util.List;
 import java.util.UUID;
@@ -9,6 +10,7 @@ import java.util.UUID;
 @Mapper
 public interface MechanicMapper {
 
+    @Lang(XMLLanguageDriver.class)
     @Select("""
             <script>
             SELECT id, first_name AS firstName, last_name AS lastName, specialization, phone, active, created_at AS createdAt
@@ -24,6 +26,15 @@ public interface MechanicMapper {
             LIMIT #{limit} OFFSET #{offset}
             </script>
             """)
+    @Results(id = "mechanicResult", value = {
+            @Result(column = "id",             property = "id"),
+            @Result(column = "firstName",      property = "firstName"),
+            @Result(column = "lastName",       property = "lastName"),
+            @Result(column = "specialization", property = "specialization"),
+            @Result(column = "phone",          property = "phone"),
+            @Result(column = "active",         property = "active"),
+            @Result(column = "createdAt",      property = "createdAt")
+    })
     List<Mechanic> findAll(@Param("q") String q,
                            @Param("specialization") String specialization,
                            @Param("limit") int limit,
@@ -34,6 +45,7 @@ public interface MechanicMapper {
             FROM mechanics
             WHERE id = #{id}
             """)
+    @ResultMap("mechanicResult")
     Mechanic findById(@Param("id") UUID id);
 
     @Insert("""

@@ -97,6 +97,12 @@ public class VehicleServiceImpl implements VehicleService {
         if (vehicle == null) {
             throw new ResourceNotFoundException("Vehículo no encontrado");
         }
+        long ordersCount = orderMapper.count(null, placa, null, null, null);
+        if (ordersCount > 0) {
+            throw new ResourceConflictException(
+                "No se puede eliminar el vehículo porque tiene " + ordersCount + " orden(es) asociada(s)"
+            );
+        }
         vehicleMapper.delete(placa);
     }
 

@@ -26,8 +26,8 @@ public class MechanicController {
     }
 
     @GetMapping
-    public Page<MechanicDto> list(@RequestParam(required = false) String q,
-                                  @RequestParam(required = false) String specialization,
+    public Page<MechanicDto> list(@RequestParam(value = "q", required = false) String q,
+                                  @RequestParam(value = "specialization", required = false) String specialization,
                                   @PageableDefault(size = 20) Pageable pageable) {
         return servicioMecanico.list(q, specialization, pageable);
     }
