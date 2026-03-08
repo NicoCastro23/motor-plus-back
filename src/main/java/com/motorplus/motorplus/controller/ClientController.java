@@ -51,7 +51,7 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
-    public ClientDto getClient(@PathVariable UUID id) {
+    public ClientDto getClient(@PathVariable("id") UUID id) {
         return servicioCliente.get(id);
     }
 
@@ -62,23 +62,23 @@ public class ClientController {
     }
 
     @PutMapping("/{id}")
-    public ClientDto updateClient(@PathVariable UUID id, @Valid @RequestBody ClientUpdateDto dto) {
+    public ClientDto updateClient(@PathVariable("id") UUID id, @Valid @RequestBody ClientUpdateDto dto) {
         return servicioCliente.update(id, dto);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteClient(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteClient(@PathVariable("id") UUID id) {
         servicioCliente.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/vehicles")
-    public Page<VehicleDto> listClientVehicles(@PathVariable UUID id, @PageableDefault(size = 20) Pageable pageable) {
+    public Page<VehicleDto> listClientVehicles(@PathVariable("id") UUID id, @PageableDefault(size = 20) Pageable pageable) {
         return servicioCliente.listVehicles(id, pageable);
     }
 
     @PostMapping("/{id}/vehicles")
-    public ResponseEntity<VehicleDto> addVehicle(@PathVariable UUID id, @Valid @RequestBody VehicleCreateDto dto) {
+    public ResponseEntity<VehicleDto> addVehicle(@PathVariable("id") UUID id, @Valid @RequestBody VehicleCreateDto dto) {
         VehicleDto created = servicioCliente.addVehicle(id, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
