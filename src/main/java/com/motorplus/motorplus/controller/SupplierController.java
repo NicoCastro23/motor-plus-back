@@ -29,7 +29,7 @@ public class SupplierController {
     }
 
     @GetMapping
-    public Page<SupplierDto> list(@RequestParam(required = false) String q,
+    public Page<SupplierDto> list(@RequestParam(value = "q", required = false) String q,
                                   @PageableDefault(size = 20) Pageable pageable) {
         return servicioSupplier.list(q, pageable);
     }

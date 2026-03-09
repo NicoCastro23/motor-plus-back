@@ -2,6 +2,7 @@ package com.motorplus.motorplus.mapper;
 
 import com.motorplus.motorplus.model.Supplier;
 import org.apache.ibatis.annotations.*;
+import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 
 import java.util.List;
 import java.util.UUID;
@@ -9,6 +10,7 @@ import java.util.UUID;
 @Mapper
 public interface SupplierMapper {
 
+    @Lang(XMLLanguageDriver.class)
     @Select("""
             <script>
             SELECT id, name, email, phone, active, created_at AS createdAt
@@ -25,7 +27,9 @@ public interface SupplierMapper {
                            @Param("limit") int limit,
                            @Param("offset") long offset);
 
+    @Lang(XMLLanguageDriver.class)
     @Select("""
+            <script>
             SELECT COUNT(*)
             FROM suppliers
             WHERE 1 = 1

@@ -26,8 +26,8 @@ public class ServiceCatalogController {
     }
 
     @GetMapping
-    public Page<ServiceDto> list(@RequestParam(required = false) String q,
-                                 @RequestParam(required = false) Boolean active,
+    public Page<ServiceDto> list(@RequestParam(value = "q", required = false) String q,
+                                 @RequestParam(value = "active", required = false) Boolean active,
                                  @PageableDefault(size = 20) Pageable pageable) {
         return servicioCatalogoServicio.list(q, active, pageable);
     }

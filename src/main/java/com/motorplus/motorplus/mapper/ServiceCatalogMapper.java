@@ -47,7 +47,7 @@ public interface ServiceCatalogMapper {
     @Select("""
         SELECT id, name, description, price, active, created_at AS createdAt
         FROM services_catalog
-        WHERE id = #{id,jdbcType=OTHER}   -- ⬅️ agrega jdbcType=OTHER
+        WHERE id = #{id,jdbcType=OTHER}
         """)
     ServiceCatalog findById(@Param("id") UUID id);
 

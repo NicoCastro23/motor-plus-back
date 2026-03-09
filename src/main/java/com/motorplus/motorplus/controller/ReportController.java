@@ -35,24 +35,24 @@ public class ReportController {
     }
 
     @GetMapping("/mechanics/performance")
-    public MechanicPerformanceReport performance(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-                                                 @RequestParam(required = false) UUID mechanicId) {
+    public MechanicPerformanceReport performance(@RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                                 @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                                                 @RequestParam(value = "mechanicId", required = false) UUID mechanicId) {
         return servicioReporte.performance(from, to, mechanicId);
     }
 
     @GetMapping("/parts/{partId}/traceability")
     public PartTraceabilityReport traceability(@PathVariable UUID partId,
-                                               @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                                               @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+                                               @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                               @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return servicioReporte.traceability(partId, from, to);
     }
 
     @GetMapping("/orders/margin")
-    public OrderMarginReport margin(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-                                    @RequestParam(required = false) UUID clientId,
-                                    @RequestParam(required = false) String plate) {
+    public OrderMarginReport margin(@RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                    @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                                    @RequestParam(value = "clientId", required = false) UUID clientId,
+                                    @RequestParam(value = "plate", required = false) String plate) {
         return servicioReporte.margin(from, to, clientId, plate);
     }
 
@@ -68,8 +68,8 @@ public class ReportController {
 
     @GetMapping("/services/popularity")
     public ServicePopularityReport servicePopularity(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return servicioReporte.servicePopularity(from, to);
     }
 
@@ -80,15 +80,15 @@ public class ReportController {
 
     @GetMapping("/clients/profitability")
     public ClientProfitabilityReport clientProfitability(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return servicioReporte.clientProfitability(from, to);
     }
 
     @GetMapping("/mechanics/productivity")
     public MechanicProductivityReport mechanicProductivity(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return servicioReporte.mechanicProductivity(from, to);
     }
 }

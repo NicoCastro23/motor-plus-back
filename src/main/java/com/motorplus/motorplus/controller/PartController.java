@@ -35,7 +35,7 @@ public class PartController {
     }
 
     @GetMapping("/{id}")
-    public PartDto get(@PathVariable UUID id) {
+    public PartDto get(@PathVariable(value = "id") UUID id) {
         return servicioPart.get(id);
     }
 
@@ -46,28 +46,28 @@ public class PartController {
     }
 
     @PutMapping("/{id}")
-    public PartDto update(@PathVariable UUID id, @Valid @RequestBody PartUpdateDto dto) {
+    public PartDto update(@PathVariable(value = "id") UUID id, @Valid @RequestBody PartUpdateDto dto) {
         return servicioPart.update(id, dto);
     }
 
     @PatchMapping("/{id}/active")
-    public PartDto setActive(@PathVariable UUID id, @RequestParam boolean active) {
+    public PartDto setActive(@PathVariable(value = "id") UUID id, @RequestParam(value = "active") boolean active) {
         return servicioPart.setActive(id, active);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable(value = "id") UUID id) {
         servicioPart.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/movements")
-    public Page<MovementDto> listMovements(@PathVariable UUID id, @ModelAttribute MovementFilter filter, @PageableDefault(size = 20) Pageable pageable) {
+    public Page<MovementDto> listMovements(@PathVariable(value = "id") UUID id, @ModelAttribute MovementFilter filter, @PageableDefault(size = 20) Pageable pageable) {
         return servicioPart.listMovements(id, filter, pageable);
     }
 
     @PostMapping("/{id}/movements")
-    public ResponseEntity<MovementDto> createMovement(@PathVariable UUID id, @Valid @RequestBody MovementCreateDto dto) {
+    public ResponseEntity<MovementDto> createMovement(@PathVariable(value = "id") UUID id, @Valid @RequestBody MovementCreateDto dto) {
         MovementDto movement = servicioPart.createMovement(id, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(movement);
     }

@@ -25,9 +25,9 @@ public class SupervisionController {
     }
 
     @GetMapping
-    public Page<SupervisionDto> list(@RequestParam(required = false) UUID supervisorId,
-                                     @RequestParam(required = false) UUID supervisadoId,
-                                     @RequestParam(required = false) UUID orderId,
+    public Page<SupervisionDto> list(@RequestParam(value = "supervisorId", required = false) UUID supervisorId,
+                                     @RequestParam(value = "supervisadoId", required = false) UUID supervisadoId,
+                                     @RequestParam(value = "orderId", required = false) UUID orderId,
                                      @PageableDefault(size = 20) Pageable pageable) {
         return servicioSupervision.list(supervisorId, supervisadoId, orderId, pageable);
     }
@@ -39,9 +39,9 @@ public class SupervisionController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> delete(@RequestParam UUID supervisorId,
-                                        @RequestParam UUID supervisadoId,
-                                        @RequestParam UUID orderId) {
+    public ResponseEntity<Void> delete(@RequestParam(value = "supervisorId") UUID supervisorId,
+                                        @RequestParam(value = "supervisadoId") UUID supervisadoId,
+                                        @RequestParam(value = "orderId") UUID orderId) {
         servicioSupervision.delete(supervisorId, supervisadoId, orderId);
         return ResponseEntity.noContent().build();
     }
