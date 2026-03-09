@@ -14,4 +14,5 @@ public interface MechanicService {
     MechanicDto create(MechanicCreateDto dto);
     MechanicDto update(UUID id, MechanicUpdateDto dto);
     void delete(UUID id);
+    MechanicDto setActive(UUID id, boolean active);
 }

@@ -1,6 +1,8 @@
 spring:
   application:
     name: motorplus
+  main :
+    banner-mode: off
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/motorplus}
     username: ${DB_USER:postgres}

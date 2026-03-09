@@ -48,6 +48,11 @@ public class MechanicController {
         return servicioMecanico.update(id, dto);
     }
 
+    @PatchMapping("/{id}/active")
+    public MechanicDto setActive(@PathVariable(value = "id") UUID id, @RequestParam(value = "active") boolean active) {
+        return servicioMecanico.setActive(id, active);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         servicioMecanico.delete(id);

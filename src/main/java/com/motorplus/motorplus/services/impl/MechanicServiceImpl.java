@@ -85,6 +85,17 @@ public class MechanicServiceImpl implements MechanicService {
         mechanicMapper.delete(id);
     }
 
+    @Override
+    public MechanicDto setActive(UUID id, boolean active) {
+        Mechanic mechanic = mechanicMapper.findById(id);
+        if (mechanic == null) {
+            throw new ResourceNotFoundException("Mecánico no encontrado");
+        }
+        mechanic.setActive(active);
+        mechanicMapper.update(mechanic);
+        return toDto(mechanic);
+    }
+
     private MechanicDto toDto(Mechanic mechanic) {
         return new MechanicDto(mechanic.getId(), mechanic.getFirstName(), mechanic.getLastName(), mechanic.getSpecialization(), mechanic.getPhone(), mechanic.isActive(), mechanic.getCreatedAt());
     }
