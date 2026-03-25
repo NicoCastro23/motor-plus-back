@@ -4,6 +4,7 @@ import com.motorplus.motorplus.dto.authDtos.ChangePasswordRequest;
 import com.motorplus.motorplus.dto.authDtos.LoginRequest;
 import com.motorplus.motorplus.dto.authDtos.LoginResponse;
 import com.motorplus.motorplus.dto.authDtos.RegisterRequest;
+import com.motorplus.motorplus.dto.authDtos.VerifyCodeRequest;
 import com.motorplus.motorplus.services.AuthService;
 import org.springframework.http.HttpStatus;
 import com.motorplus.motorplus.util.JwtUtil;
@@ -35,6 +36,12 @@ public class AuthController {
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/verify-code")
+    public ResponseEntity<Void> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
+        authService.verifyCode(request.email(), request.code());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/change-password")

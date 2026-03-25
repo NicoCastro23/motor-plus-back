@@ -23,11 +23,13 @@ public class AuthService {
     private final AdminMapper adminMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final EmailService emailService;
 
-    public AuthService(AdminMapper adminMapper, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public AuthService(AdminMapper adminMapper, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, EmailService emailService) {
         this.adminMapper = adminMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.emailService = emailService;
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -38,7 +40,7 @@ public class AuthService {
         }
 
         if (!admin.isActive()) {
-            throw new ResourceNotFoundException("Usuario inactivo");
+            throw new ResourceNotFoundException("Cuenta pendiente de verificación. Revisa tu correo electrónico.");
         }
 
         if (!passwordEncoder.matches(request.password(), admin.getPassword())) {
@@ -51,19 +53,40 @@ public class AuthService {
     }
 
     public void register(RegisterRequest request) {
-        if (adminMapper.findByUsername(request.username()) != null) {
+        if (adminMapper.findByUsernameAny(request.username()) != null) {
             throw new ResourceConflictException("El nombre de usuario ya está en uso");
         }
+        if (adminMapper.findByEmail(request.email()) != null) {
+            throw new ResourceConflictException("El correo electrónico ya está en uso");
+        }
+
+        String code = String.format("%06d", (int)(Math.random() * 1_000_000));
 
         Admin admin = new Admin();
         admin.setId(UUID.randomUUID());
         admin.setUsername(request.username());
         admin.setEmail(request.email());
         admin.setPassword(passwordEncoder.encode(request.password()));
-        admin.setActive(true);
+        admin.setActive(false);
         admin.setCreatedAt(Instant.now());
+        admin.setVerificationToken(code);
 
         adminMapper.insert(admin);
+        emailService.sendVerificationEmail(request.email(), code);
+    }
+
+    public void verifyCode(String email, String code) {
+        Admin admin = adminMapper.findByEmail(email);
+        if (admin == null) {
+            throw new ResourceNotFoundException("No se encontró una cuenta pendiente con ese correo");
+        }
+        if (admin.isActive()) {
+            throw new ResourceConflictException("La cuenta ya está activa");
+        }
+        if (!code.equals(admin.getVerificationToken())) {
+            throw new ResourceConflictException("Código de verificación incorrecto");
+        }
+        adminMapper.activateAdmin(admin.getId());
     }
 
     public void changePassword(String username, ChangePasswordRequest request) {
