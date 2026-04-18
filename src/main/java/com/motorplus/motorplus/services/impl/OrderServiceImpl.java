@@ -131,15 +131,16 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceNotFoundException("Orden no encontrada");
         }
         
-        // AUTOMATIZACIÓN: Validar stock antes de completar orden
+        // Validar y descontar stock al completar la orden
         if (status == OrderStatus.COMPLETED) {
             validateStockForOrder(id);
+            deductStockForOrder(id);
         }
-        
+
         order.setStatus(status);
         order.setUpdatedAt(Instant.now());
         orderMapper.updateStatus(id, status, order.getUpdatedAt());
-        
+
         // AUTOMATIZACIÓN: Generar factura automáticamente cuando se completa la orden
         if (status == OrderStatus.COMPLETED) {
             try {
@@ -182,6 +183,24 @@ public class OrderServiceImpl implements OrderService {
                             part.getName(), part.getStock(), itemPart.getQuantity())
                     );
                 }
+            }
+        }
+    }
+
+    private void deductStockForOrder(UUID orderId) {
+        List<OrderItem> items = orderItemMapper.findByOrder(orderId, Integer.MAX_VALUE, 0);
+        for (OrderItem item : items) {
+            List<ItemPart> parts = itemPartMapper.findByOrderItem(item.getId(), Integer.MAX_VALUE, 0);
+            for (ItemPart itemPart : parts) {
+                partMapper.updateStock(itemPart.getPartId(), -itemPart.getQuantity());
+                Movement movement = new Movement();
+                movement.setId(UUID.randomUUID());
+                movement.setPartId(itemPart.getPartId());
+                movement.setType(MovementType.OUT);
+                movement.setQuantity(itemPart.getQuantity());
+                movement.setPerformedAt(Instant.now());
+                movement.setNotes("Consumo al completar orden " + orderId);
+                movementMapper.insert(movement);
             }
         }
     }
@@ -266,24 +285,8 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceNotFoundException("Item no encontrado");
         }
         
-        // Restaurar stock de todos los repuestos asociados a este item
-        List<ItemPart> parts = itemPartMapper.findByOrderItem(itemId, Integer.MAX_VALUE, 0);
-        for (ItemPart part : parts) {
-            // Restaurar stock
-            partMapper.updateStock(part.getPartId(), part.getQuantity());
-            
-            // Crear movimiento de inventario (entrada - devolución)
-            Movement movement = new Movement();
-            movement.setId(UUID.randomUUID());
-            movement.setPartId(part.getPartId());
-            movement.setType(MovementType.IN);
-            movement.setQuantity(part.getQuantity());
-            movement.setPerformedAt(Instant.now());
-            movement.setNotes("Devolución por eliminación de item en orden " + orderId + ", item " + itemId);
-            movementMapper.insert(movement);
-        }
-        
         // Eliminar el item (esto eliminará automáticamente los repuestos asociados por CASCADE)
+        // El stock nunca fue descontado mientras la orden estaba en progreso, no hay nada que restaurar
         orderItemMapper.delete(orderId, itemId);
         recalculateTotal(orderId);
     }
@@ -376,28 +379,14 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceConflictException("La cantidad debe ser mayor a cero");
         }
         
-        // Crear el consumo de repuesto
+        // Registrar el repuesto en el ítem (el stock se descuenta al completar la orden)
         ItemPart itemPart = new ItemPart();
         itemPart.setOrderItemId(itemId);
         itemPart.setPartId(dto.partId());
         itemPart.setQuantity(dto.quantity());
         itemPart.setUnitPrice(dto.unitPrice());
         itemPartMapper.insert(itemPart);
-        
-        // Actualizar stock del repuesto (disminuir)
-        int delta = -dto.quantity();
-        partMapper.updateStock(dto.partId(), delta);
-        
-        // Crear movimiento de inventario (salida)
-        Movement movement = new Movement();
-        movement.setId(UUID.randomUUID());
-        movement.setPartId(dto.partId());
-        movement.setType(MovementType.OUT);
-        movement.setQuantity(dto.quantity());
-        movement.setPerformedAt(Instant.now());
-        movement.setNotes("Consumo en orden " + orderId + ", item " + itemId);
-        movementMapper.insert(movement);
-        
+
         recalculateTotal(orderId);
         return toItemPartDto(itemPart);
     }
@@ -418,39 +407,11 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceNotFoundException("Consumo no encontrado");
         }
         
-        // Si se cambia la cantidad, validar stock y actualizar
+        // Actualizar cantidad si se especifica (el stock se ajusta al completar la orden)
         if (dto.quantity() != null && !dto.quantity().equals(itemPart.getQuantity())) {
             if (dto.quantity() <= 0) {
                 throw new ResourceConflictException("La cantidad debe ser mayor a cero");
             }
-            Part part = partMapper.findById(repuestoId);
-            if (part == null) {
-                throw new ResourceNotFoundException("Repuesto no encontrado");
-            }
-            
-            int diferencia = dto.quantity() - itemPart.getQuantity();
-            int stockDisponible = part.getStock();
-            
-            // Si se aumenta la cantidad, validar que hay stock suficiente
-            if (diferencia > 0 && stockDisponible < diferencia) {
-                throw new ResourceConflictException("Stock insuficiente. Stock disponible: " + stockDisponible + ", cantidad adicional solicitada: " + diferencia);
-            }
-            
-            // Actualizar stock
-            partMapper.updateStock(repuestoId, -diferencia);
-            
-            // Crear movimiento de inventario si hay cambio
-            if (diferencia != 0) {
-                Movement movement = new Movement();
-                movement.setId(UUID.randomUUID());
-                movement.setPartId(repuestoId);
-                movement.setType(diferencia > 0 ? MovementType.OUT : MovementType.IN);
-                movement.setQuantity(Math.abs(diferencia));
-                movement.setPerformedAt(Instant.now());
-                movement.setNotes("Ajuste en orden " + orderId + ", item " + itemId + ". Cantidad anterior: " + itemPart.getQuantity() + ", nueva: " + dto.quantity());
-                movementMapper.insert(movement);
-            }
-            
             itemPart.setQuantity(dto.quantity());
         }
         if (dto.unitPrice() != null) itemPart.setUnitPrice(dto.unitPrice());
@@ -476,20 +437,7 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceNotFoundException("Consumo no encontrado");
         }
         
-        // Restaurar stock del repuesto (aumentar)
-        int cantidadARestaurar = itemPart.getQuantity();
-        partMapper.updateStock(partId, cantidadARestaurar);
-        
-        // Crear movimiento de inventario (entrada - devolución)
-        Movement movement = new Movement();
-        movement.setId(UUID.randomUUID());
-        movement.setPartId(partId);
-        movement.setType(MovementType.IN);
-        movement.setQuantity(cantidadARestaurar);
-        movement.setPerformedAt(Instant.now());
-        movement.setNotes("Devolución de consumo en orden " + orderId + ", item " + itemId);
-        movementMapper.insert(movement);
-        
+        // El stock se descuenta solo al completar la orden, no al quitar el repuesto del ítem
         itemPartMapper.delete(itemId, partId);
         recalculateTotal(orderId);
     }

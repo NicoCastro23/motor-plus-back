@@ -42,7 +42,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public OrderDto get(@PathVariable UUID id) {
+    public OrderDto get(@PathVariable("id") UUID id) {
         return servicioOrden.get(id);
     }
 
@@ -53,88 +53,88 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}")
-    public OrderDto patch(@PathVariable UUID id, @RequestBody OrderPatchDto dto) {
+    public OrderDto patch(@PathVariable("id") UUID id, @RequestBody OrderPatchDto dto) {
         return servicioOrden.patch(id, dto);
     }
 
     @PostMapping("/{id}/status")
-    public OrderDto changeStatus(@PathVariable UUID id, @RequestParam OrderStatus status) {
+    public OrderDto changeStatus(@PathVariable("id") UUID id, @RequestParam("status") OrderStatus status) {
         return servicioOrden.changeStatus(id, status);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") UUID id) {
         servicioOrden.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/items")
-    public Page<OrderItemDto> listItems(@PathVariable UUID id, @PageableDefault(size = 20) Pageable pageable) {
+    public Page<OrderItemDto> listItems(@PathVariable("id") UUID id, @PageableDefault(size = 20) Pageable pageable) {
         return servicioOrden.listItems(id, pageable);
     }
 
     @PostMapping("/{id}/items")
-    public ResponseEntity<OrderItemDto> addItem(@PathVariable UUID id, @Valid @RequestBody OrderItemCreateDto dto) {
+    public ResponseEntity<OrderItemDto> addItem(@PathVariable("id") UUID id, @Valid @RequestBody OrderItemCreateDto dto) {
         OrderItemDto created = servicioOrden.addItem(id, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping("/{orderId}/items/{itemId}")
-    public OrderItemDto getItem(@PathVariable UUID orderId, @PathVariable UUID itemId) {
+    public OrderItemDto getItem(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId) {
         return servicioOrden.getItem(orderId, itemId);
     }
 
     @PatchMapping("/{orderId}/items/{itemId}")
-    public OrderItemDto patchItem(@PathVariable UUID orderId, @PathVariable UUID itemId, @RequestBody OrderItemPatchDto dto) {
+    public OrderItemDto patchItem(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId, @RequestBody OrderItemPatchDto dto) {
         return servicioOrden.patchItem(orderId, itemId, dto);
     }
 
     @DeleteMapping("/{orderId}/items/{itemId}")
-    public ResponseEntity<Void> removeItem(@PathVariable UUID orderId, @PathVariable UUID itemId) {
+    public ResponseEntity<Void> removeItem(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId) {
         servicioOrden.removeItem(orderId, itemId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{orderId}/items/{itemId}/assignments")
-    public Page<AssignmentDto> listAssignments(@PathVariable UUID orderId, @PathVariable UUID itemId, @PageableDefault(size = 20) Pageable pageable) {
+    public Page<AssignmentDto> listAssignments(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId, @PageableDefault(size = 20) Pageable pageable) {
         return servicioOrden.listAssignments(orderId, itemId, pageable);
     }
 
     @PostMapping("/{orderId}/items/{itemId}/assignments")
-    public ResponseEntity<AssignmentDto> addAssignment(@PathVariable UUID orderId, @PathVariable UUID itemId, @Valid @RequestBody AssignmentCreateDto dto) {
+    public ResponseEntity<AssignmentDto> addAssignment(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId, @Valid @RequestBody AssignmentCreateDto dto) {
         AssignmentDto created = servicioOrden.addAssignment(orderId, itemId, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PatchMapping("/{orderId}/items/{itemId}/assignments/{mechanicId}")
-    public AssignmentDto patchAssignment(@PathVariable UUID orderId, @PathVariable UUID itemId, @PathVariable UUID mechanicId, @RequestBody AssignmentPatchDto dto) {
+    public AssignmentDto patchAssignment(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId, @PathVariable("mechanicId") UUID mechanicId, @RequestBody AssignmentPatchDto dto) {
         return servicioOrden.patchAssignment(orderId, itemId, mechanicId, dto);
     }
 
     @DeleteMapping("/{orderId}/items/{itemId}/assignments/{mechanicId}")
-    public ResponseEntity<Void> removeAssignment(@PathVariable UUID orderId, @PathVariable UUID itemId, @PathVariable UUID mechanicId) {
+    public ResponseEntity<Void> removeAssignment(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId, @PathVariable("mechanicId") UUID mechanicId) {
         servicioOrden.removeAssignment(orderId, itemId, mechanicId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{orderId}/items/{itemId}/parts")
-    public Page<ItemPartDto> listItemParts(@PathVariable UUID orderId, @PathVariable UUID itemId, @PageableDefault(size = 20) Pageable pageable) {
+    public Page<ItemPartDto> listItemParts(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId, @PageableDefault(size = 20) Pageable pageable) {
         return servicioOrden.listItemParts(orderId, itemId, pageable);
     }
 
     @PostMapping("/{orderId}/items/{itemId}/parts")
-    public ResponseEntity<ItemPartDto> addItemPart(@PathVariable UUID orderId, @PathVariable UUID itemId, @Valid @RequestBody ItemPartCreateDto dto) {
+    public ResponseEntity<ItemPartDto> addItemPart(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId, @Valid @RequestBody ItemPartCreateDto dto) {
         ItemPartDto created = servicioOrden.addItemPart(orderId, itemId, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PatchMapping("/{orderId}/items/{itemId}/parts/{partId}")
-    public ItemPartDto patchItemPart(@PathVariable UUID orderId, @PathVariable UUID itemId, @PathVariable UUID partId, @RequestBody ItemPartPatchDto dto) {
+    public ItemPartDto patchItemPart(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId, @PathVariable("partId") UUID partId, @RequestBody ItemPartPatchDto dto) {
         return servicioOrden.patchItemPart(orderId, itemId, partId, dto);
     }
 
     @DeleteMapping("/{orderId}/items/{itemId}/parts/{partId}")
-    public ResponseEntity<Void> removeItemPart(@PathVariable UUID orderId, @PathVariable UUID itemId, @PathVariable Long partId) {
+    public ResponseEntity<Void> removeItemPart(@PathVariable("orderId") UUID orderId, @PathVariable("itemId") UUID itemId, @PathVariable("partId") Long partId) {
         servicioOrden.removeItemPart(orderId, itemId, partId);
         return ResponseEntity.noContent().build();
     }

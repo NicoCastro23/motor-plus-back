@@ -57,10 +57,12 @@ CREATE TABLE IF NOT EXISTS parts (
     description TEXT,
     unit_price  NUMERIC(12, 2) NOT NULL,
     stock       INTEGER NOT NULL DEFAULT 0,
+    min_stock   INTEGER NOT NULL DEFAULT 5,
     active      BOOLEAN NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMPTZ NOT NULL,
     CONSTRAINT uq_parts_sku UNIQUE (sku)
     );
+ALTER TABLE parts ADD COLUMN IF NOT EXISTS min_stock INTEGER NOT NULL DEFAULT 5;
 
 CREATE TABLE IF NOT EXISTS supplier_parts (
                                               supplier_id  UUID NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
@@ -131,11 +133,46 @@ CREATE TABLE IF NOT EXISTS part_movements (
     type         VARCHAR(16) NOT NULL CHECK (type IN ('IN', 'OUT')),
     quantity     INTEGER NOT NULL,
     performed_at TIMESTAMPTZ NOT NULL,
-    notes        TEXT
+    notes        TEXT,
+    supplier_id  UUID REFERENCES suppliers(id) ON DELETE SET NULL,
+    entry_cost   NUMERIC(12, 2)
     );
+
+ALTER TABLE part_movements ADD COLUMN IF NOT EXISTS supplier_id UUID REFERENCES suppliers(id) ON DELETE SET NULL;
+ALTER TABLE part_movements ADD COLUMN IF NOT EXISTS entry_cost NUMERIC(12, 2);
 
 CREATE INDEX IF NOT EXISTS idx_part_movements_part ON part_movements(part_id);
 CREATE INDEX IF NOT EXISTS idx_part_movements_date ON part_movements(part_id, performed_at DESC);
+
+-- Stock alerts --------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS stock_alerts (
+    id            UUID PRIMARY KEY,
+    part_id       UUID NOT NULL REFERENCES parts(id) ON DELETE CASCADE,
+    current_stock INTEGER NOT NULL,
+    min_stock     INTEGER NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL,
+    resolved      BOOLEAN NOT NULL DEFAULT FALSE,
+    resolved_at   TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_stock_alerts_part ON stock_alerts(part_id);
+CREATE INDEX IF NOT EXISTS idx_stock_alerts_resolved ON stock_alerts(resolved);
+
+-- Purchase orders -----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS purchase_orders (
+    id          UUID PRIMARY KEY,
+    part_id     UUID NOT NULL REFERENCES parts(id) ON DELETE RESTRICT,
+    supplier_id UUID REFERENCES suppliers(id) ON DELETE SET NULL,
+    quantity    INTEGER NOT NULL,
+    unit_cost   NUMERIC(12, 2),
+    status      VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'SENT', 'RECEIVED', 'CANCELLED')),
+    notes       TEXT,
+    created_at  TIMESTAMPTZ NOT NULL,
+    updated_at  TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_purchase_orders_part ON purchase_orders(part_id);
+CREATE INDEX IF NOT EXISTS idx_purchase_orders_status ON purchase_orders(status);
 
 -- Invoices -----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS invoices (

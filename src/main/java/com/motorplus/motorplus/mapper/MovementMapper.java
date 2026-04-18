@@ -13,7 +13,7 @@ public interface MovementMapper {
 
     @Select("""
             <script>
-            SELECT id, part_id AS partId, type, quantity, performed_at AS performedAt, notes
+            SELECT id, part_id AS partId, type, quantity, performed_at AS performedAt, notes, supplier_id AS supplierId, entry_cost AS entryCost
             FROM part_movements
             WHERE part_id = #{partId}
             <if test="type != null">
@@ -37,8 +37,8 @@ public interface MovementMapper {
                               @Param("offset") long offset);
 
     @Insert("""
-            INSERT INTO part_movements(id, part_id, type, quantity, performed_at, notes)
-            VALUES(#{id}, #{partId}, #{type}, #{quantity}, #{performedAt}, #{notes})
+            INSERT INTO part_movements(id, part_id, type, quantity, performed_at, notes, supplier_id, entry_cost)
+            VALUES(#{id}, #{partId}, #{type}, #{quantity}, #{performedAt}, #{notes}, #{supplierId}, #{entryCost})
             """)
     void insert(Movement movement);
 }

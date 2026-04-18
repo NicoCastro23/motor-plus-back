@@ -1,11 +1,18 @@
 package com.motorplus.motorplus.services;
 
+import com.motorplus.motorplus.dto.purchaseOrderDtos.PurchaseOrderStatus;
 import com.motorplus.motorplus.mapper.InvoiceMapper;
 import com.motorplus.motorplus.mapper.OrderMapper;
 import com.motorplus.motorplus.mapper.PartMapper;
+import com.motorplus.motorplus.mapper.PurchaseOrderMapper;
+import com.motorplus.motorplus.mapper.StockAlertMapper;
+import com.motorplus.motorplus.mapper.SupplierMapper;
 import com.motorplus.motorplus.model.Invoice;
 import com.motorplus.motorplus.model.Order;
 import com.motorplus.motorplus.model.Part;
+import com.motorplus.motorplus.model.PurchaseOrder;
+import com.motorplus.motorplus.model.StockAlert;
+import com.motorplus.motorplus.model.Supplier;
 import com.motorplus.motorplus.dto.invoiceDtos.InvoiceStatus;
 import com.motorplus.motorplus.dto.ordersDtos.OrderStatus;
 import org.slf4j.Logger;
@@ -16,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Servicio de automatización con tareas programadas
@@ -28,16 +36,22 @@ public class AutomationService {
     private final PartMapper partMapper;
     private final InvoiceMapper invoiceMapper;
     private final OrderMapper orderMapper;
-    
-    // Configuración (en producción debería venir de application.yml)
-    private static final int LOW_STOCK_THRESHOLD = 10;
+    private final StockAlertMapper stockAlertMapper;
+    private final PurchaseOrderMapper purchaseOrderMapper;
+    private final SupplierMapper supplierMapper;
+
     private static final int STALE_ORDER_DAYS = 7;
     private static final int DRAFT_EXPIRATION_DAYS = 30;
 
-    public AutomationService(PartMapper partMapper, InvoiceMapper invoiceMapper, OrderMapper orderMapper) {
+    public AutomationService(PartMapper partMapper, InvoiceMapper invoiceMapper,
+                             OrderMapper orderMapper, StockAlertMapper stockAlertMapper,
+                             PurchaseOrderMapper purchaseOrderMapper, SupplierMapper supplierMapper) {
         this.partMapper = partMapper;
         this.invoiceMapper = invoiceMapper;
         this.orderMapper = orderMapper;
+        this.stockAlertMapper = stockAlertMapper;
+        this.purchaseOrderMapper = purchaseOrderMapper;
+        this.supplierMapper = supplierMapper;
     }
 
     /**
@@ -45,27 +59,50 @@ public class AutomationService {
      * Se ejecuta diariamente a las 8:00 AM
      */
     @Scheduled(cron = "0 0 8 * * ?") // 8:00 AM todos los días
-    @Transactional(readOnly = true)
+    @Transactional
     public void checkLowStock() {
         logger.info("Iniciando verificación de stock bajo...");
-        
         try {
             List<Part> parts = partMapper.findAll(null, true, Integer.MAX_VALUE, 0);
             int lowStockCount = 0;
-            
+
             for (Part part : parts) {
-                if (part.isActive() && part.getStock() < LOW_STOCK_THRESHOLD) {
+                if (part.getStock() < part.getMinStock()) {
                     lowStockCount++;
-                    logger.warn("⚠️ STOCK BAJO: {} (SKU: {}) - Stock actual: {}", 
-                        part.getName(), part.getSku(), part.getStock());
+                    logger.warn("STOCK BAJO: {} (SKU: {}) - Stock: {}/{}", part.getName(), part.getSku(), part.getStock(), part.getMinStock());
+                    if (!stockAlertMapper.existsActive(part.getId())) {
+                        StockAlert alert = new StockAlert();
+                        alert.setId(UUID.randomUUID());
+                        alert.setPartId(part.getId());
+                        alert.setCurrentStock(part.getStock());
+                        alert.setMinStock(part.getMinStock());
+                        alert.setCreatedAt(Instant.now());
+                        alert.setResolved(false);
+                        stockAlertMapper.insert(alert);
+                    }
+                    if (!purchaseOrderMapper.existsPendingOrSentForPart(part.getId())) {
+                        Supplier supplier = supplierMapper.findFirstByPartId(part.getId());
+                        PurchaseOrder po = new PurchaseOrder();
+                        po.setId(UUID.randomUUID());
+                        po.setPartId(part.getId());
+                        po.setSupplierId(supplier != null ? supplier.getId() : null);
+                        po.setQuantity(part.getMinStock() * 2);
+                        po.setStatus(PurchaseOrderStatus.PENDING.name());
+                        po.setNotes("Generado automáticamente. Stock actual: " + part.getStock() + " / mínimo: " + part.getMinStock());
+                        po.setCreatedAt(Instant.now());
+                        po.setUpdatedAt(Instant.now());
+                        purchaseOrderMapper.insert(po);
+                        logger.info("Orden de compra automática creada para {} (cantidad: {})", part.getName(), po.getQuantity());
+                    }
+                } else {
+                    stockAlertMapper.resolveByPart(part.getId(), Instant.now());
                 }
             }
-            
+
             if (lowStockCount > 0) {
-                logger.warn("Se encontraron {} repuestos con stock bajo (umbral: {})", 
-                    lowStockCount, LOW_STOCK_THRESHOLD);
+                logger.warn("Se encontraron {} repuestos con stock bajo", lowStockCount);
             } else {
-                logger.info("✅ Todos los repuestos tienen stock suficiente");
+                logger.info("Todos los repuestos tienen stock suficiente");
             }
         } catch (Exception e) {
             logger.error("Error al verificar stock bajo", e);

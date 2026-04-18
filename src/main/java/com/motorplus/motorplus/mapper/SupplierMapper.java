@@ -65,4 +65,14 @@ public interface SupplierMapper {
 
     @Delete("DELETE FROM suppliers WHERE id = #{id}")
     int delete(@Param("id") UUID id);
+
+    @Select("""
+            SELECT s.id, s.name, s.email, s.phone, s.active, s.created_at AS createdAt
+            FROM suppliers s
+            INNER JOIN supplier_parts sp ON sp.supplier_id = s.id
+            WHERE sp.part_id = #{partId} AND s.active = true
+            ORDER BY sp.price ASC
+            LIMIT 1
+            """)
+    Supplier findFirstByPartId(@Param("partId") UUID partId);
 }

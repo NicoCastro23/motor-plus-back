@@ -16,4 +16,7 @@ public interface ReportService {
     PendingInvoicesReport pendingInvoices();
     ClientProfitabilityReport clientProfitability(LocalDate from, LocalDate to);
     MechanicProductivityReport mechanicProductivity(LocalDate from, LocalDate to);
+    InventoryRotationReport inventoryRotation();
+    InventoryAvgCostReport inventoryAvgCost();
+    ReorderTimeReport reorderTime();
 }

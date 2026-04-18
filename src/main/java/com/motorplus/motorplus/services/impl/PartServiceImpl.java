@@ -65,9 +65,20 @@ public class PartServiceImpl implements PartService {
         part.setDescription(dto.description());
         part.setUnitPrice(dto.unitPrice());
         part.setStock(dto.stock());
+        part.setMinStock(dto.minStock());
         part.setActive(true);
         part.setCreatedAt(Instant.now());
         partMapper.insert(part);
+        if (dto.stock() > 0) {
+            Movement initial = new Movement();
+            initial.setId(UUID.randomUUID());
+            initial.setPartId(part.getId());
+            initial.setType(MovementType.IN);
+            initial.setQuantity(dto.stock());
+            initial.setPerformedAt(Instant.now());
+            initial.setNotes("Stock inicial al crear repuesto");
+            movementMapper.insert(initial);
+        }
         return toDto(part);
     }
 
@@ -82,6 +93,7 @@ public class PartServiceImpl implements PartService {
         if (dto.description() != null) part.setDescription(dto.description());
         if (dto.unitPrice() != null) part.setUnitPrice(dto.unitPrice());
         if (dto.stock() != null) part.setStock(dto.stock());
+        if (dto.minStock() != null) part.setMinStock(dto.minStock());
         if (dto.active() != null) part.setActive(dto.active());
         partMapper.update(part);
         return toDto(part);
@@ -138,6 +150,8 @@ public class PartServiceImpl implements PartService {
         movement.setQuantity(dto.quantity());
         movement.setPerformedAt(Instant.now());
         movement.setNotes(dto.notes());
+        movement.setSupplierId(dto.supplierId());
+        movement.setEntryCost(dto.entryCost());
         movementMapper.insert(movement);
         partMapper.updateStock(partId, delta);
         part.setStock(part.getStock() + delta);
@@ -145,10 +159,13 @@ public class PartServiceImpl implements PartService {
     }
 
     private PartDto toDto(Part part) {
-        return new PartDto(part.getId(), part.getName(), part.getSku(), part.getDescription(), part.getUnitPrice(), part.getStock(), part.isActive(), part.getCreatedAt());
+        return new PartDto(part.getId(), part.getName(), part.getSku(), part.getDescription(),
+                part.getUnitPrice(), part.getStock(), part.getMinStock(), part.isActive(), part.getCreatedAt());
     }
 
     private MovementDto toMovementDto(Movement movement) {
-        return new MovementDto(movement.getId(), movement.getPartId(), movement.getType(), movement.getQuantity(), movement.getPerformedAt(), movement.getNotes());
+        return new MovementDto(movement.getId(), movement.getPartId(), movement.getType(),
+                movement.getQuantity(), movement.getPerformedAt(), movement.getNotes(),
+                movement.getSupplierId(), movement.getEntryCost());
     }
 }

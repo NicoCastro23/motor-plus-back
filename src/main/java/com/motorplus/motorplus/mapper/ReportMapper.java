@@ -131,9 +131,9 @@ public interface ReportMapper {
                    p.stock AS currentStock,
                    p.unit_price AS unitPrice,
                    (p.stock * p.unit_price) AS stockValue,
-                   CASE 
+                   CASE
                        WHEN p.stock = 0 THEN 'OUT_OF_STOCK'
-                       WHEN p.stock < 10 THEN 'LOW_STOCK'
+                       WHEN p.stock < p.min_stock THEN 'LOW_STOCK'
                        ELSE 'OK'
                    END AS status
             FROM parts p
@@ -239,6 +239,59 @@ public interface ReportMapper {
             """)
     List<Map<String, Object>> clientProfitability(@Param("from") Instant from,
                                                   @Param("to") Instant to);
+
+    // KPI 1: Rotación de inventario
+    @Select("""
+            SELECT p.id AS partId, p.name AS partName, p.sku,
+                   p.stock AS currentStock,
+                   COALESCE(SUM(CASE WHEN pm.type = 'IN' THEN pm.quantity ELSE 0 END), 0) AS totalIn,
+                   COALESCE(SUM(CASE WHEN pm.type = 'OUT' THEN pm.quantity ELSE 0 END), 0) AS totalOut,
+                   CASE
+                       WHEN (p.stock + COALESCE(SUM(CASE WHEN pm.type = 'OUT' THEN pm.quantity ELSE 0 END), 0)) > 0
+                           THEN ROUND(
+                               COALESCE(SUM(CASE WHEN pm.type = 'OUT' THEN pm.quantity ELSE 0 END), 0)::NUMERIC /
+                               ((p.stock + COALESCE(SUM(CASE WHEN pm.type = 'OUT' THEN pm.quantity ELSE 0 END), 0))::NUMERIC / 2),
+                               2)
+                       ELSE 0
+                   END AS rotationRate
+            FROM parts p
+            LEFT JOIN part_movements pm ON pm.part_id = p.id
+            WHERE p.active = true
+            GROUP BY p.id, p.name, p.sku, p.stock
+            ORDER BY rotationRate DESC, p.name ASC
+            """)
+    List<Map<String, Object>> inventoryRotation();
+
+    // KPI 2: Costo promedio ponderado de inventario
+    @Select("""
+            SELECT p.id AS partId, p.name AS partName, p.sku,
+                   p.stock AS currentStock,
+                   p.unit_price AS currentUnitPrice,
+                   COALESCE(AVG(pm.entry_cost), 0) AS avgEntryCost,
+                   p.stock * COALESCE(AVG(pm.entry_cost), p.unit_price) AS inventoryValue
+            FROM parts p
+            LEFT JOIN part_movements pm ON pm.part_id = p.id AND pm.type = 'IN' AND pm.entry_cost IS NOT NULL
+            WHERE p.active = true
+            GROUP BY p.id, p.name, p.sku, p.stock, p.unit_price
+            ORDER BY inventoryValue DESC
+            """)
+    List<Map<String, Object>> inventoryAvgCost();
+
+    // KPI 3: Tiempo promedio de reorden (creación → RECEIVED)
+    @Select("""
+            SELECT p.id AS partId, p.name AS partName, p.sku,
+                   COUNT(po.id) AS totalOrders,
+                   COUNT(CASE WHEN po.status = 'RECEIVED' THEN po.id END) AS receivedOrders,
+                   COALESCE(AVG(CASE WHEN po.status = 'RECEIVED'
+                       THEN EXTRACT(EPOCH FROM (po.updated_at - po.created_at)) / 86400.0
+                       END), 0) AS avgReorderDays
+            FROM parts p
+            INNER JOIN purchase_orders po ON po.part_id = p.id
+            WHERE p.active = true
+            GROUP BY p.id, p.name, p.sku
+            ORDER BY avgReorderDays DESC
+            """)
+    List<Map<String, Object>> reorderTime();
 
     // Reporte Complejo 2: Productividad de Mecánicos
     @Select("""

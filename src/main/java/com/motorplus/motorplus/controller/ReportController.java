@@ -42,7 +42,7 @@ public class ReportController {
     }
 
     @GetMapping("/parts/{partId}/traceability")
-    public PartTraceabilityReport traceability(@PathVariable UUID partId,
+    public PartTraceabilityReport traceability(@PathVariable("partId") UUID partId,
                                                @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
                                                @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return servicioReporte.traceability(partId, from, to);
@@ -90,5 +90,20 @@ public class ReportController {
             @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return servicioReporte.mechanicProductivity(from, to);
+    }
+
+    @GetMapping("/inventory/rotation")
+    public InventoryRotationReport inventoryRotation() {
+        return servicioReporte.inventoryRotation();
+    }
+
+    @GetMapping("/inventory/avg-cost")
+    public InventoryAvgCostReport inventoryAvgCost() {
+        return servicioReporte.inventoryAvgCost();
+    }
+
+    @GetMapping("/purchase-orders/reorder-time")
+    public ReorderTimeReport reorderTime() {
+        return servicioReporte.reorderTime();
     }
 }

@@ -1,5 +1,6 @@
 package com.motorplus.motorplus.dto.movementDtos;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -9,6 +10,8 @@ public record MovementDto(
         MovementType type,
         int quantity,
         Instant performedAt,
-        String notes
+        String notes,
+        UUID supplierId,
+        BigDecimal entryCost
 ) {
 }

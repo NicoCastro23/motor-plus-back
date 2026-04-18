@@ -4,6 +4,7 @@ import com.motorplus.motorplus.dto.movementDtos.MovementType;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -16,6 +17,8 @@ public class Movement {
     private int quantity;
     private Instant performedAt;
     private String notes;
+    private UUID supplierId;
+    private BigDecimal entryCost;
 
 
 }

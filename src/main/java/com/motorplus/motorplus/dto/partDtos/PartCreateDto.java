@@ -11,6 +11,7 @@ public record PartCreateDto(
         @NotBlank String sku,
         String description,
         @NotNull @Min(0) BigDecimal unitPrice,
-        @Min(0) int stock
+        @Min(0) int stock,
+        @Min(0) int minStock
 ) {
 }

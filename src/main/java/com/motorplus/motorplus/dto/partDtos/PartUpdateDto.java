@@ -10,6 +10,7 @@ public record PartUpdateDto(
         String description,
         @Min(0) BigDecimal unitPrice,
         Integer stock,
+        @Min(0) Integer minStock,
         Boolean active
 ) {
 }

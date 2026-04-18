@@ -9,16 +9,14 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class Part {
+public class PurchaseOrder {
     private UUID id;
-    private String name;
-    private String sku;
-    private String description;
-    private BigDecimal unitPrice;
-    private int stock;
-    private int minStock;
-    private boolean active;
+    private UUID partId;
+    private UUID supplierId;
+    private int quantity;
+    private BigDecimal unitCost;
+    private String status;
+    private String notes;
     private Instant createdAt;
-
-
+    private Instant updatedAt;
 }

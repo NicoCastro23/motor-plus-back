@@ -4,11 +4,13 @@ import com.motorplus.motorplus.dto.authDtos.ChangePasswordRequest;
 import com.motorplus.motorplus.dto.authDtos.LoginRequest;
 import com.motorplus.motorplus.dto.authDtos.LoginResponse;
 import com.motorplus.motorplus.dto.authDtos.RegisterRequest;
+import com.motorplus.motorplus.exceptions.ResourceConflictException;
+import com.motorplus.motorplus.security.LoginRateLimiter;
 import com.motorplus.motorplus.services.AuthService;
-import org.springframework.http.HttpStatus;
 import com.motorplus.motorplus.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,16 +21,29 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtUtil jwtUtil;
+    private final LoginRateLimiter rateLimiter;
 
-    public AuthController(AuthService authService, JwtUtil jwtUtil) {
+    public AuthController(AuthService authService, JwtUtil jwtUtil, LoginRateLimiter rateLimiter) {
         this.authService = authService;
         this.jwtUtil = jwtUtil;
+        this.rateLimiter = rateLimiter;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        LoginResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request,
+                                               HttpServletRequest httpRequest) {
+        String ip = resolveClientIp(httpRequest);
+        if (rateLimiter.isBlocked(ip)) {
+            throw new ResourceConflictException("Demasiados intentos fallidos. Intente de nuevo en 10 minutos.");
+        }
+        try {
+            LoginResponse response = authService.login(request);
+            rateLimiter.clearFailures(ip);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            rateLimiter.recordFailure(ip);
+            throw ex;
+        }
     }
 
     @PostMapping("/register")
@@ -53,5 +68,13 @@ public class AuthController {
             return bearerToken.substring(7);
         }
         throw new RuntimeException("Token no encontrado");
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

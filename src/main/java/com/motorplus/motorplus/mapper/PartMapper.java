@@ -11,7 +11,7 @@ public interface PartMapper {
 
     @Select("""
             <script>
-            SELECT id, name, sku, description, unit_price AS unitPrice, stock, active, created_at AS createdAt
+            SELECT id, name, sku, description, unit_price AS unitPrice, stock, min_stock AS minStock, active, created_at AS createdAt
             FROM parts
             WHERE 1 = 1
             <if test="q != null and q != ''">
@@ -45,15 +45,15 @@ public interface PartMapper {
     long count(@Param("q") String q, @Param("active") Boolean active);
 
     @Select("""
-            SELECT id, name, sku, description, unit_price AS unitPrice, stock, active, created_at AS createdAt
+            SELECT id, name, sku, description, unit_price AS unitPrice, stock, min_stock AS minStock, active, created_at AS createdAt
             FROM parts
             WHERE id = #{id}
             """)
     Part findById(@Param("id") UUID id);
 
     @Insert("""
-            INSERT INTO parts(id, name, sku, description, unit_price, stock, active, created_at)
-            VALUES(#{id}, #{name}, #{sku}, #{description}, #{unitPrice}, #{stock}, #{active}, #{createdAt})
+            INSERT INTO parts(id, name, sku, description, unit_price, stock, min_stock, active, created_at)
+            VALUES(#{id}, #{name}, #{sku}, #{description}, #{unitPrice}, #{stock}, #{minStock}, #{active}, #{createdAt})
             """)
     void insert(Part part);
 
@@ -64,6 +64,7 @@ public interface PartMapper {
                 description = #{description},
                 unit_price = #{unitPrice},
                 stock = #{stock},
+                min_stock = #{minStock},
                 active = #{active}
             WHERE id = #{id}
             """)

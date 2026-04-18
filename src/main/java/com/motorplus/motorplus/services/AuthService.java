@@ -33,12 +33,12 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         Admin admin = adminMapper.findByUsername(request.username());
 
-        if (admin == null) {
+        if (admin == null || !passwordEncoder.matches(request.password(), admin.getPassword())) {
             throw new ResourceNotFoundException("Credenciales inválidas");
         }
 
-        if (!passwordEncoder.matches(request.password(), admin.getPassword())) {
-            throw new ResourceNotFoundException("Credenciales inválidas");
+        if (!admin.isActive()) {
+            throw new ResourceConflictException("La cuenta está desactivada. Contacte al administrador.");
         }
 
         String token = jwtUtil.generateToken(admin.getUsername());

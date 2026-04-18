@@ -12,6 +12,10 @@ spring:
     init:
       mode: always
 
+jwt:
+  secret: ${JWT_SECRET:MotorPlus-2024-Clave-Super-Secreta-Minimo-32-Bytes!!}
+  expiration: ${JWT_EXPIRATION_MS:86400000}
+
 mybatis:
   type-handlers-package: com.motorplus.motorplus.mybatis
   default-scripting-language: org.apache.ibatis.scripting.xmltags.XMLLanguageDriver

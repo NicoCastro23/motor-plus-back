@@ -240,6 +240,64 @@ public class ReportServiceImpl implements ReportService {
         return new MechanicProductivityReport(fromInstant, toInstant, entries);
     }
 
+    @Override
+    public InventoryRotationReport inventoryRotation() {
+        List<Map<String, Object>> rows = reportMapper.inventoryRotation();
+        List<InventoryRotationReport.InventoryRotationEntry> entries = rows.stream()
+                .map(row -> new InventoryRotationReport.InventoryRotationEntry(
+                        (UUID) value(row, "partId", "partid"),
+                        stringValue(value(row, "partName", "partname")),
+                        stringValue(value(row, "sku")),
+                        (int) longValue(value(row, "currentStock", "currentstock")),
+                        longValue(value(row, "totalIn", "totalin")),
+                        longValue(value(row, "totalOut", "totalout")),
+                        bigDecimal(value(row, "rotationRate", "rotationrate"))
+                ))
+                .toList();
+        return new InventoryRotationReport(entries);
+    }
+
+    @Override
+    public InventoryAvgCostReport inventoryAvgCost() {
+        List<Map<String, Object>> rows = reportMapper.inventoryAvgCost();
+        List<InventoryAvgCostReport.InventoryAvgCostEntry> entries = rows.stream()
+                .map(row -> new InventoryAvgCostReport.InventoryAvgCostEntry(
+                        (UUID) value(row, "partId", "partid"),
+                        stringValue(value(row, "partName", "partname")),
+                        stringValue(value(row, "sku")),
+                        (int) longValue(value(row, "currentStock", "currentstock")),
+                        bigDecimal(value(row, "currentUnitPrice", "currentunitprice")),
+                        bigDecimal(value(row, "avgEntryCost", "avgentrycost")),
+                        bigDecimal(value(row, "inventoryValue", "inventoryvalue"))
+                ))
+                .toList();
+        BigDecimal total = entries.stream()
+                .map(InventoryAvgCostReport.InventoryAvgCostEntry::inventoryValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new InventoryAvgCostReport(entries, total);
+    }
+
+    @Override
+    public ReorderTimeReport reorderTime() {
+        List<Map<String, Object>> rows = reportMapper.reorderTime();
+        List<ReorderTimeReport.ReorderTimeEntry> entries = rows.stream()
+                .map(row -> new ReorderTimeReport.ReorderTimeEntry(
+                        (UUID) value(row, "partId", "partid"),
+                        stringValue(value(row, "partName", "partname")),
+                        stringValue(value(row, "sku")),
+                        longValue(value(row, "totalOrders", "totalorders")),
+                        longValue(value(row, "receivedOrders", "receivedorders")),
+                        bigDecimal(value(row, "avgReorderDays", "avgreorderdays"))
+                ))
+                .toList();
+        BigDecimal overallAvg = entries.isEmpty() ? BigDecimal.ZERO :
+                entries.stream()
+                        .map(ReorderTimeReport.ReorderTimeEntry::avgReorderDays)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .divide(BigDecimal.valueOf(entries.size()), 2, java.math.RoundingMode.HALF_UP);
+        return new ReorderTimeReport(entries, overallAvg);
+    }
+
     // MÉTODOS AUXILIARES
 
     private Instant toInstant(Object value) {

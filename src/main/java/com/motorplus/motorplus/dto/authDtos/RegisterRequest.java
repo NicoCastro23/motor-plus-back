@@ -1,5 +1,6 @@
 package com.motorplus.motorplus.dto.authDtos;
 
+import com.motorplus.motorplus.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -14,7 +15,7 @@ public record RegisterRequest(
         String email,
 
         @NotBlank(message = "La contraseña es requerida")
-        @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+        @ValidPassword
         String password
 ) {
 }

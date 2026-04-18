@@ -11,6 +11,7 @@ public record PartDto(
         String description,
         BigDecimal unitPrice,
         int stock,
+        int minStock,
         boolean active,
         Instant createdAt
 ) {
