@@ -8,25 +8,12 @@ spring:
     username: ${DB_USER:postgres}
     password: ${DB_PASS:postgres}
     driver-class-name: org.postgresql.Driver
-  mail:
-    host: smtp.gmail.com
-    port: 465
-    username: motorplussupport@gmail.com
-    password: ddzohrswsaqwhoyb
-    protocol: smtps
-    properties:
-      mail:
-        smtp:
-          auth: true
-          ssl:
-            enable: true
-
-app:
-  frontend-url: http://localhost:5173
+  sql:
+    init:
+      mode: always
 
 mybatis:
   type-handlers-package: com.motorplus.motorplus.mybatis
   default-scripting-language: org.apache.ibatis.scripting.xmltags.XMLLanguageDriver
   configuration:
     map-underscore-to-camel-case: true
-

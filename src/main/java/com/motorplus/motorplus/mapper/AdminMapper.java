@@ -11,14 +11,13 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import org.apache.ibatis.type.JdbcType;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Mapper
 public interface AdminMapper {
 
     @Select("""
-            SELECT id, username, password, email, active, created_at, verification_token
+            SELECT id, username, password, email, active, created_at
             FROM admins
             WHERE username = #{username}
             AND active = true
@@ -29,13 +28,12 @@ public interface AdminMapper {
         @Result(property = "password", column = "password"),
         @Result(property = "email", column = "email"),
         @Result(property = "active", column = "active"),
-        @Result(property = "createdAt", column = "created_at", javaType = Instant.class, jdbcType = JdbcType.TIMESTAMP),
-        @Result(property = "verificationToken", column = "verification_token")
+        @Result(property = "createdAt", column = "created_at", javaType = java.time.Instant.class, jdbcType = JdbcType.TIMESTAMP)
     })
     Admin findByUsername(@Param("username") String username);
 
     @Select("""
-            SELECT id, username, password, email, active, created_at, verification_token
+            SELECT id, username, password, email, active, created_at
             FROM admins
             WHERE username = #{username}
             """)
@@ -43,7 +41,7 @@ public interface AdminMapper {
     Admin findByUsernameAny(@Param("username") String username);
 
     @Select("""
-            SELECT id, username, password, email, active, created_at, verification_token
+            SELECT id, username, password, email, active, created_at
             FROM admins
             WHERE email = #{email}
             """)
@@ -51,17 +49,10 @@ public interface AdminMapper {
     Admin findByEmail(@Param("email") String email);
 
     @Insert("""
-            INSERT INTO admins(id, username, password, email, active, created_at, verification_token)
-            VALUES(#{id}::uuid, #{username}, #{password}, #{email}, #{active}, #{createdAt}, #{verificationToken})
+            INSERT INTO admins(id, username, password, email, active, created_at)
+            VALUES(#{id}::uuid, #{username}, #{password}, #{email}, #{active}, #{createdAt})
             """)
     void insert(Admin admin);
-
-    @Update("""
-            UPDATE admins
-            SET active = true, verification_token = NULL
-            WHERE id = #{id}::uuid
-            """)
-    void activateAdmin(@Param("id") UUID id);
 
     @Update("""
             UPDATE admins
@@ -71,4 +62,3 @@ public interface AdminMapper {
             """)
     int updatePassword(@Param("username") String username, @Param("newPassword") String newPassword);
 }
-

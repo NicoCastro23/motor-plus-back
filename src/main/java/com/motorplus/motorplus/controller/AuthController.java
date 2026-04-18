@@ -4,7 +4,6 @@ import com.motorplus.motorplus.dto.authDtos.ChangePasswordRequest;
 import com.motorplus.motorplus.dto.authDtos.LoginRequest;
 import com.motorplus.motorplus.dto.authDtos.LoginResponse;
 import com.motorplus.motorplus.dto.authDtos.RegisterRequest;
-import com.motorplus.motorplus.dto.authDtos.VerifyCodeRequest;
 import com.motorplus.motorplus.services.AuthService;
 import org.springframework.http.HttpStatus;
 import com.motorplus.motorplus.util.JwtUtil;
@@ -38,12 +37,6 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PostMapping("/verify-code")
-    public ResponseEntity<Void> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
-        authService.verifyCode(request.email(), request.code());
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping("/change-password")
     public ResponseEntity<Void> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
@@ -62,4 +55,3 @@ public class AuthController {
         throw new RuntimeException("Token no encontrado");
     }
 }
-

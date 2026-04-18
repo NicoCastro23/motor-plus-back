@@ -20,8 +20,4 @@ public class Admin {
     private String email;
     private boolean active;
     private Instant createdAt;
-    private String verificationToken;
-
-
 }
-

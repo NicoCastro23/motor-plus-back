@@ -175,16 +175,13 @@ CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice ON invoice_payments(invo
 
 -- Administrators ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS admins (
-                                       id                 UUID PRIMARY KEY,
-                                       username           VARCHAR(100) NOT NULL UNIQUE,
-    password           VARCHAR(255) NOT NULL,
-    email              VARCHAR(255) NOT NULL UNIQUE,
-    active             BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at         TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    verification_token VARCHAR(255)
+                                       id         UUID PRIMARY KEY,
+                                       username   VARCHAR(100) NOT NULL UNIQUE,
+    password   VARCHAR(255) NOT NULL,
+    email      VARCHAR(255) NOT NULL UNIQUE,
+    active     BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
-
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);
 
 -- Insertar administrador por defecto (username: admin, password: admin123)
 -- La contraseña es el hash BCrypt de "admin123"
