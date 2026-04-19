@@ -33,7 +33,7 @@ public class MechanicController {
     }
 
     @GetMapping("/{id}")
-    public MechanicDto get(@PathVariable UUID id) {
+    public MechanicDto get(@PathVariable("id") UUID id) {
         return servicioMecanico.get(id);
     }
 
@@ -44,17 +44,17 @@ public class MechanicController {
     }
 
     @PutMapping("/{id}")
-    public MechanicDto update(@PathVariable UUID id, @Valid @RequestBody MechanicUpdateDto dto) {
+    public MechanicDto update(@PathVariable("id") UUID id, @Valid @RequestBody MechanicUpdateDto dto) {
         return servicioMecanico.update(id, dto);
     }
 
     @PatchMapping("/{id}/active")
-    public MechanicDto setActive(@PathVariable(value = "id") UUID id, @RequestParam(value = "active") boolean active) {
+    public MechanicDto setActive(@PathVariable("id") UUID id, @RequestParam(value = "active") boolean active) {
         return servicioMecanico.setActive(id, active);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") UUID id) {
         servicioMecanico.delete(id);
         return ResponseEntity.noContent().build();
     }

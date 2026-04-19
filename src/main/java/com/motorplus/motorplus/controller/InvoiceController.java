@@ -32,7 +32,7 @@ public class InvoiceController {
     }
 
     @PostMapping("/from-order/{orderId}")
-    public ResponseEntity<InvoiceDto> generateFromOrder(@PathVariable UUID orderId) {
+    public ResponseEntity<InvoiceDto> generateFromOrder(@PathVariable("orderId") UUID orderId) {
         InvoiceDto invoice = serviceInvoice.generateFromOrder(orderId);
         return ResponseEntity.status(HttpStatus.CREATED).body(invoice);
     }
@@ -43,61 +43,61 @@ public class InvoiceController {
     }
 
     @GetMapping("/{id}")
-    public InvoiceDto get(@PathVariable UUID id) {
+    public InvoiceDto get(@PathVariable("id") UUID id) {
         return serviceInvoice.get(id);
     }
 
     @PatchMapping("/{id}")
-    public InvoiceDto patch(@PathVariable UUID id, @RequestBody InvoicePatchDto dto) {
+    public InvoiceDto patch(@PathVariable("id") UUID id, @RequestBody InvoicePatchDto dto) {
         return serviceInvoice.patch(id, dto);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") UUID id) {
         serviceInvoice.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/lines")
-    public Page<InvoiceLineDto> listLines(@PathVariable UUID id, @PageableDefault(size = 20) Pageable pageable) {
+    public Page<InvoiceLineDto> listLines(@PathVariable("id") UUID id, @PageableDefault(size = 20) Pageable pageable) {
         return serviceInvoice.listLines(id, pageable);
     }
 
     @PostMapping("/{id}/lines")
-    public ResponseEntity<InvoiceLineDto> addLine(@PathVariable UUID id, @Valid @RequestBody InvoiceLineCreateDto dto) {
+    public ResponseEntity<InvoiceLineDto> addLine(@PathVariable("id") UUID id, @Valid @RequestBody InvoiceLineCreateDto dto) {
         InvoiceLineDto line = serviceInvoice.addLine(id, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(line);
     }
 
     @PatchMapping("/{id}/lines/{type}/{refId}")
-    public InvoiceLineDto patchLine(@PathVariable UUID id,
-                                    @PathVariable LineType type,
-                                    @PathVariable UUID refId,
+    public InvoiceLineDto patchLine(@PathVariable("id") UUID id,
+                                    @PathVariable("type") LineType type,
+                                    @PathVariable("refId") UUID refId,
                                     @RequestBody InvoiceLinePatchDto dto) {
         return serviceInvoice.patchLine(id, type, refId, dto);
     }
 
     @DeleteMapping("/{id}/lines/{type}/{refId}")
-    public ResponseEntity<Void> removeLine(@PathVariable UUID id,
-                                           @PathVariable LineType type,
-                                           @PathVariable UUID refId) {
+    public ResponseEntity<Void> removeLine(@PathVariable("id") UUID id,
+                                           @PathVariable("type") LineType type,
+                                           @PathVariable("refId") UUID refId) {
         serviceInvoice.removeLine(id, type, refId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/payments")
-    public Page<PaymentDto> listPayments(@PathVariable UUID id, @PageableDefault(size = 20) Pageable pageable) {
+    public Page<PaymentDto> listPayments(@PathVariable("id") UUID id, @PageableDefault(size = 20) Pageable pageable) {
         return serviceInvoice.listPayments(id, pageable);
     }
 
     @PostMapping("/{id}/payments")
-    public ResponseEntity<PaymentDto> addPayment(@PathVariable UUID id, @Valid @RequestBody PaymentCreateDto dto) {
+    public ResponseEntity<PaymentDto> addPayment(@PathVariable("id") UUID id, @Valid @RequestBody PaymentCreateDto dto) {
         PaymentDto payment = serviceInvoice.addPayment(id, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(payment);
     }
 
     @DeleteMapping("/{invoiceId}/payments/{paymentId}")
-    public ResponseEntity<Void> removePayment(@PathVariable UUID invoiceId, @PathVariable UUID paymentId) {
+    public ResponseEntity<Void> removePayment(@PathVariable("invoiceId") UUID invoiceId, @PathVariable("paymentId") UUID paymentId) {
         serviceInvoice.removePayment(invoiceId, paymentId);
         return ResponseEntity.noContent().build();
     }

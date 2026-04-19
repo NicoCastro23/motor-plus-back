@@ -43,7 +43,7 @@ public class StockAlertController {
 
     @PatchMapping("/{id}/resolve")
     @Transactional
-    public ResponseEntity<StockAlertDto> resolve(@PathVariable UUID id) {
+    public ResponseEntity<StockAlertDto> resolve(@PathVariable("id") UUID id) {
         StockAlert alert = stockAlertMapper.findById(id);
         if (alert == null) {
             throw new ResourceNotFoundException("Alerta no encontrada");

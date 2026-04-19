@@ -35,7 +35,7 @@ public class SupplierController {
     }
 
     @GetMapping("/{id}")
-    public SupplierDto get(@PathVariable UUID id) {
+    public SupplierDto get(@PathVariable("id") UUID id) {
         return servicioSupplier.get(id);
     }
 
@@ -46,34 +46,34 @@ public class SupplierController {
     }
 
     @PutMapping("/{id}")
-    public SupplierDto update(@PathVariable UUID id, @Valid @RequestBody SupplierUpdateDto dto) {
+    public SupplierDto update(@PathVariable("id") UUID id, @Valid @RequestBody SupplierUpdateDto dto) {
         return servicioSupplier.update(id, dto);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") UUID id) {
         servicioSupplier.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/parts")
-    public Page<SupplierPartDto> listParts(@PathVariable UUID id, @PageableDefault(size = 20) Pageable pageable) {
+    public Page<SupplierPartDto> listParts(@PathVariable("id") UUID id, @PageableDefault(size = 20) Pageable pageable) {
         return servicioSupplier.listSupplierParts(id, pageable);
     }
 
     @PostMapping("/{id}/parts")
-    public ResponseEntity<SupplierPartDto> addPart(@PathVariable UUID id, @Valid @RequestBody SupplierPartCreateDto dto) {
+    public ResponseEntity<SupplierPartDto> addPart(@PathVariable("id") UUID id, @Valid @RequestBody SupplierPartCreateDto dto) {
         SupplierPartDto created = servicioSupplier.addSupplierPart(id, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PatchMapping("/{id}/parts/{partId}")
-    public SupplierPartDto patchPart(@PathVariable UUID id, @PathVariable UUID partId, @RequestBody SupplierPartPatchDto dto) {
+    public SupplierPartDto patchPart(@PathVariable("id") UUID id, @PathVariable("partId") UUID partId, @RequestBody SupplierPartPatchDto dto) {
         return servicioSupplier.patchSupplierPart(id, partId, dto);
     }
 
     @DeleteMapping("/{id}/parts/{partId}")
-    public ResponseEntity<Void> removePart(@PathVariable UUID id, @PathVariable UUID partId) {
+    public ResponseEntity<Void> removePart(@PathVariable("id") UUID id, @PathVariable("partId") UUID partId) {
         servicioSupplier.removeSupplierPart(id, partId);
         return ResponseEntity.noContent().build();
     }

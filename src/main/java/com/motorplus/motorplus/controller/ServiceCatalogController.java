@@ -33,7 +33,7 @@ public class ServiceCatalogController {
     }
 
     @GetMapping("/{id}")
-    public ServiceDto get(@PathVariable UUID id) {
+    public ServiceDto get(@PathVariable("id") UUID id) {
         return servicioCatalogoServicio.get(id);
     }
 
@@ -44,17 +44,17 @@ public class ServiceCatalogController {
     }
 
     @PutMapping("/{id}")
-    public ServiceDto update(@PathVariable UUID id, @Valid @RequestBody ServiceUpdateDto dto) {
+    public ServiceDto update(@PathVariable("id") UUID id, @Valid @RequestBody ServiceUpdateDto dto) {
         return servicioCatalogoServicio.update(id, dto);
     }
 
     @PatchMapping("/{id}/active")
-    public ServiceDto setActive(@PathVariable UUID id, @RequestParam boolean active) {
+    public ServiceDto setActive(@PathVariable("id") UUID id, @RequestParam("active") boolean active) {
         return servicioCatalogoServicio.setActive(id, active);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") UUID id) {
         servicioCatalogoServicio.delete(id);
         return ResponseEntity.noContent().build();
     }

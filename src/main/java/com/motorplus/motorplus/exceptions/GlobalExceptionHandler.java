@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,6 +38,13 @@ public class GlobalExceptionHandler {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
         ErrorResponse response = ErrorResponse.of(HttpStatus.BAD_REQUEST, "La solicitud contiene errores de validación", request.getRequestURI(), errors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        logger.warn("Error al leer el cuerpo de la solicitud en {}: {}", request.getRequestURI(), ex.getMessage());
+        ErrorResponse response = ErrorResponse.of(HttpStatus.BAD_REQUEST, "El cuerpo de la solicitud contiene datos inválidos.", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 

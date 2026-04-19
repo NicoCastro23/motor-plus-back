@@ -56,7 +56,7 @@ public class PurchaseOrderController {
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
-    public PurchaseOrderDto get(@PathVariable UUID id) {
+    public PurchaseOrderDto get(@PathVariable("id") UUID id) {
         Map<String, Object> row = purchaseOrderMapper.findByIdWithDetails(id);
         if (row == null) {
             throw new ResourceNotFoundException("Orden de compra no encontrada");
@@ -88,7 +88,7 @@ public class PurchaseOrderController {
 
     @PatchMapping("/{id}/status")
     @Transactional
-    public PurchaseOrderDto updateStatus(@PathVariable UUID id,
+    public PurchaseOrderDto updateStatus(@PathVariable("id") UUID id,
                                          @Valid @RequestBody PurchaseOrderUpdateStatusDto dto) {
         PurchaseOrder order = purchaseOrderMapper.findById(id);
         if (order == null) {
@@ -126,7 +126,7 @@ public class PurchaseOrderController {
 
     @PostMapping("/{id}/return")
     @Transactional
-    public ResponseEntity<Void> returnItems(@PathVariable UUID id,
+    public ResponseEntity<Void> returnItems(@PathVariable("id") UUID id,
                                             @Valid @RequestBody PurchaseOrderReturnDto dto) {
         PurchaseOrder order = purchaseOrderMapper.findById(id);
         if (order == null) {
