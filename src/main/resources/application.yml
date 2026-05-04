@@ -21,3 +21,16 @@ mybatis:
   default-scripting-language: org.apache.ibatis.scripting.xmltags.XMLLanguageDriver
   configuration:
     map-underscore-to-camel-case: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
