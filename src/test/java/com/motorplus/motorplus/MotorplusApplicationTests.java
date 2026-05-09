@@ -1,14 +1,13 @@
 package com.motorplus.motorplus;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class MotorplusApplicationTests {
 
 	@Test
-	@Disabled("Requiere conexión a PostgreSQL - se omite en CI")
 	void contextLoads() {
 	}
 
